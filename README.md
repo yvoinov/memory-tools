@@ -13,4 +13,4 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 
 `ld_prereq.sh` fulfills the prerequisites required for ld.so when using a custom allocator (Linux/Solaris).
 
-`disable_overcommit.sh` creates a system configuration that minimizes swapping, disables overcommit and OOM killer; remember that for this configuration to work effectively, a swap partition of at least one amount of RAM is required, no matter how much this RAM is.
+`disable_overcommit.sh` creates a system configuration that minimizes swapping, disables overcommit and OOM killer; remember that for this configuration to work effectively, a swap partition of at least one amount of RAM is required, no matter how much this RAM is (Linux).
