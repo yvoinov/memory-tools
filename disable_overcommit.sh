@@ -15,7 +15,8 @@ CONFIG_NAME="10-lma.conf"
 
 # Write file content
 SYSCTL_FILE_STR1="# System tweaks by TCW"
-SYSCTL_FILE_STR2="vm.swappiness = 10"
+# Note: Don't set swappiness too low on Proxmox/KVM or create big enough swap.
+SYSCTL_FILE_STR2="vm.swappiness = 50"
 SYSCTL_FILE_STR3="vm.vfs_cache_pressure = 50"
 SYSCTL_FILE_STR4="vm.overcommit_ratio = 99"
 # Note: When run aerospike with small memory footprint, set vm.overcommit_memory=1. Otherwise asd will fail to start.
