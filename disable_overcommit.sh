@@ -4,7 +4,7 @@
 ## The script sets up LMA OS-wide performance prerequisites.
 ##
 ## Version 1.2
-## Written by Y.Voinov (C) 2022
+## Written by Y.Voinov (C) 2022-2023
 #####################################################################################
 
 # Sysctl config path
@@ -19,7 +19,7 @@ SYSCTL_FILE_STR1="# System tweaks by TCW"
 SYSCTL_FILE_STR2="vm.swappiness = 50"
 SYSCTL_FILE_STR3="vm.vfs_cache_pressure = 50"
 SYSCTL_FILE_STR4="vm.overcommit_ratio = 99"
-# Note: When run aerospike with small memory footprint, set vm.overcommit_memory=1. Otherwise asd will fail to start.
+# Note: When run aerospike or KVM with relatively small memory footprint, set vm.overcommit_memory=1. Otherwise asd will fail to start.
 SYSCTL_FILE_STR5="vm.overcommit_memory = 2"
 
 # Existence flags
