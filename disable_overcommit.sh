@@ -131,9 +131,9 @@ if [ "x$*" != "x" ]; then
   for i in $arg_list
   do
     case $i in
-     -h|-H|\?) usage_note;;
-     *) shift
-     ;;
+      -h|-H|\?) usage_note;;
+      *) shift
+      ;;
     esac
   done
 fi
