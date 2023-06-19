@@ -1,16 +1,17 @@
 #!/bin/sh
 
 #####################################################################################
-## The script executes ld prerequisites for LMA (Solaris/Linux).
+## The script executes ld prerequisites for LMA (Solaris/Linux/FreeBSD).
 ## 
-## Version 1.0
-## Written by Y.Voinov (C) 2022
+## Version 1.1
+## Written by Y.Voinov (C) 2022, 2023
 #####################################################################################
 
 # LMA paths. Change if installed different base.
 LD_BASE="/usr/local"
 LD_PATH1="$LD_BASE/lib/ltalloc"
 LD_PATH2="$LD_BASE/lib/ltalloc/64"
+LIB_NAME="libltalloc.so"
 
 # Paths to write
 # Linux
@@ -28,7 +29,7 @@ CRLE_CONF2="/var/ld/64/ld.config"
 # Subroutines
 usage_note()
 {
- echo "The script executes ld prerequisites for LMA (Solaris/Linux)."
+ echo "The script executes ld prerequisites for LMA (Solaris/Linux/FreeBSD)."
  echo "Must be run as root."
  echo "Example: `basename $0`"
  exit 0
@@ -40,6 +41,8 @@ check_os()
     echo "Linux"
   elif [ "`uname`" = "SunOS" ]; then
     echo "SunOS"
+  elif [ "`uname`" = "FreeBSD" ]; then
+    echo "FreeBSD"
   else
     echo "ERROR: Unsupported OS."
     exit 1
@@ -65,9 +68,9 @@ write_linux()
   fi
 }
 
-check_paths()
+check_lib()
 {
-  if [ ! -d $LD_PATH1 -a ! -d $LD_PATH2 ]; then
+  if [ ! -f $LD_PATH1/$LIB_NAME -a ! -f $LD_PATH2/$LIB_NAME ]; then
     echo "ERROR: The path(s) being added do not exist. Install LMA first."
     exit 2
   fi
@@ -75,7 +78,6 @@ check_paths()
 
 write_sunos()
 {
-  check_path
   # If custom config exists, just all dirs.
   if [ -f $CRLE_CONF1 ]; then
     crle -c /var/ld/ld.config -u -l $LD_PATH1 -s $LD_PATH1
@@ -86,6 +88,16 @@ write_sunos()
     crle -64 -c /var/ld/64/ld.config -u -l $LD_PATH2 -s $LD_PATH2
   else
     crle -64 -c /var/ld/64/ld.config -l /lib/64:/usr/lib/64:$LD_PATH -s /lib/secure/64:/usr/lib/secure/64:$LD_PATH2
+  fi
+}
+
+write_freebsd()
+{
+  if [ -z "`ldconfig -r | grep $LD_PATH1/$LIB_NAME`" ]; then
+    ldconfig -R $LD_PATH1
+  fi
+  if [ -z "`ldconfig -r | grep $LD_PATH2/$LIB_NAME`" ]; then
+    ldconfig -R $LD_PATH2
   fi
 }
 
@@ -104,15 +116,15 @@ if [ "x$*" != "x" ]; then
   for i in $arg_list
   do
     case $i in
-     -h|-H|\?) usage_note;;
-     *) shift
-     ;;
+      -h|-H|\?) usage_note;;
+      *) shift
+      ;;
     esac
   done
 fi
 
 check_root
-check_paths
+check_lib
 
 if [ "`check_os`" = "Linux" ]; then
   write_linux
@@ -120,6 +132,8 @@ if [ "`check_os`" = "Linux" ]; then
   check_linux
 elif [ "`check_os`" = "SunOS" ]; then
   write_sunos
+elif [ "`check_os`" = "FreeBSD" ]; then
+  write_freebsd
 fi
 
 echo "Done."
