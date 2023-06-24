@@ -4,7 +4,7 @@
 ## The script executes ld prerequisites for LMA (Solaris/Linux/FreeBSD).
 ## 
 ## Version 1.1
-## Written by Y.Voinov (C) 2022, 2023
+## Written by Y.Voinov (C) 2022-2023
 #####################################################################################
 
 # LMA paths. Change if installed different base.

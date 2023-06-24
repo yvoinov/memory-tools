@@ -6,7 +6,7 @@
 ## To turn it back on, do systemctl disable disable-thp && systemctl stop disable-thp
 ## 
 ## Version 1.1
-## Written by Y.Voinov (C) 2022
+## Written by Y.Voinov (C) 2022-2023
 #####################################################################################
 
 # Path to write unit
