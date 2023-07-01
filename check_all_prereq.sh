@@ -23,9 +23,9 @@ OVERCOMMIT_RATIO="70"
 # vfs_cache_pressure no more 50 (must be <=50)
 SYSCTL_FILE_STR3="vm.vfs_cache_pressure"
 VFS_CACHE_PRESSURE="50"
-# swappiness at least 50 (must be >=50)
+# swappiness at least 30 (must be >=30)
 SYSCTL_FILE_STR4="vm.swappiness"
-SWAPPINESS="50"
+SWAPPINESS="30"
 
 # Subroutines
 usage_note()
