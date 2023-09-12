@@ -3,9 +3,9 @@
 
 ## Memory-related and performance tools
 
-These tools are designed to perform prerequisites and performance improvements for custom allocators. 
+These tools are designed to perform prerequisites and performance improvements for custom allocators.
 
-Although they were originally developed for LMA, it is not difficult to adapt them to any custom allocator since the requirements are approximately the same. 
+Although they were originally developed for LMA, it is not difficult to adapt them to any custom allocator since the requirements are approximately the same.
 
 All utilities are run as root (since sudo may not necessarily be installed). Read them carefully before run to understand what you are doing exactly.
 
@@ -16,3 +16,5 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 `disable_overcommit.sh` creates a system configuration that minimizes swapping, disables overcommit and OOM killer; remember that for this configuration to work effectively, a swap partition of at least one amount of RAM is required, no matter how much this RAM is (Linux).
 
 `check_all_prereq.sh` allows you to check all the prerequisites required to use a custom allocator. Platform specific script.
+
+`mem_frag.sh` is determine memory fragmentation (Linux only).
