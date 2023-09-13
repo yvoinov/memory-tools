@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #####################################################################################
-## Script to determine memory fragmentation (Linux/SunOS).
+## Script to determine memory fragmentation (Linux/Solaris).
 ##
 ## Version 1.1
 ## Modified by Y.Voinov (C) 2023
