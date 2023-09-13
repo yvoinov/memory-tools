@@ -11,7 +11,7 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 
 `disable_thp.sh` is intended to create a service that disables THP globally, since THP leads to increased memory fragmentation and, as a result, to excessive swapping (Linux).
 
-`ld_prereq.sh` fulfills the prerequisites required for ld.so when using a custom allocator (Linux/Solaris).
+`ld_prereq.sh` fulfills the prerequisites required for ld.so when using a custom allocator (Linux/Solaris/FreeBSD).
 
 `disable_overcommit.sh` creates a system configuration that minimizes swapping, disables overcommit and OOM killer; remember that for this configuration to work effectively, a swap partition of at least one amount of RAM is required, no matter how much this RAM is (Linux).
 
