@@ -17,4 +17,4 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 
 `check_all_prereq.sh` allows you to check all the prerequisites required to use a custom allocator. Platform specific script.
 
-`mem_frag.sh` is determine memory fragmentation (Linux only).
+`mem_frag.sh` is determine memory fragmentation (Linux/Solaris).
