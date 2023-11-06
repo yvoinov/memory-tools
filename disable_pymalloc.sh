@@ -5,7 +5,7 @@
 ## It sets PYTHONMALLOC to use libC. This require when using custom allocators to
 ## prevent segfaults.
 ##
-## Version 1.0
+## Version 1.1
 ## Written by Y.Voinov (C) 2022-2023
 #####################################################################################
 
@@ -41,9 +41,14 @@ check_os
 check_root
 
 if [ -f "$GLOBAL_ENV" ]; then
+  value="`cat $GLOBAL_ENV | grep PYTHONMALLOC`"
+  if [ ! -z "$value" ]; then
+    echo "ERROR: $value already set."
+    exit 1
+  fi
   echo "PYTHONMALLOC='malloc'" >> $GLOBAL_ENV
 else
-  echo "File $GLOBAL_ENV not found. Set PYTHONMALLOC in different place. Exiting..."
+  echo "ERROR: File $GLOBAL_ENV not found. Exiting..."
   exit 1
 fi
 
