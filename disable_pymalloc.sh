@@ -5,7 +5,7 @@
 ## It sets PYTHONMALLOC to use libC. This require when using custom allocators to
 ## prevent segfaults.
 ##
-## Version 1.1
+## Version 1.2
 ## Written by Y.Voinov (C) 2022-2023
 #####################################################################################
 
@@ -37,8 +37,26 @@ check_root()
   fi
 }
 
+check_version()
+{
+  py_exec="`whereis python | awk '{ print $2 }'`"
+
+  if [ -z "$py_exec" ]; then
+    echo "ERROR: Python not found. Exiting..."
+    exit 4
+  fi
+
+  py_ver="`$py_exec -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/'`"
+
+  if [ "$py_ver" -lt "36" ]; then
+    echo "ERROR: PYTHONMALLOC only supported from 3.6."
+    exit 5
+  fi
+}
+
 check_os
 check_root
+check_version
 
 if [ -f "$GLOBAL_ENV" ]; then
   value="`cat $GLOBAL_ENV | grep PYTHONMALLOC`"
