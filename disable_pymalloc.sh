@@ -5,8 +5,8 @@
 ## It sets PYTHONMALLOC to use libC. This require when using custom allocators to
 ## prevent segfaults.
 ##
-## Version 1.2
-## Written by Y.Voinov (C) 2022-2023
+## Version 1.3
+## Written by Y.Voinov (C) 2022-2024
 #####################################################################################
 
 # Global environment file
@@ -46,9 +46,12 @@ check_version()
     exit 4
   fi
 
-  py_ver="`$py_exec -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/'`"
+  py_ver="`$py_exec -V 2>&1 | awk '{print $2}'`"
 
-  if [ "$py_ver" -lt "36" ]; then
+  py_ver_major="`echo $py_ver | cut -f1 -d'.'`"
+  py_ver_minor="`echo $py_ver | cut -f1 -d'.'`"
+
+  if [ "$py_ver_major" -ge "3" -a "$py_ver_minor" -ge "6" ]; then
     echo "ERROR: PYTHONMALLOC only supported from 3.6."
     exit 5
   fi
