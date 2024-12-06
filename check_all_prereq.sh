@@ -1,14 +1,14 @@
 #!/bin/sh
 
 #####################################################################################
-## The script checks all prerequisites for LMA
+## The script checks all prerequisites for custom allocator
 ##
-## Version 1.1
+## Version 1.2
 ## Written by Y.Voinov (C) 2023-2024
 #####################################################################################
 
-# LMA paths. Change if installed different base.
-LIB_NAME_BASE="ltalloc"
+# Allocator install paths. Change if installed different base.
+LIB_NAME_BASE="*alloc"
 LD_BASE="/usr/local"
 LD_PATH1="$LD_BASE/lib/$LIB_NAME_BASE"
 LD_PATH2="$LD_BASE/lib/$LIB_NAME_BASE/64"
@@ -32,10 +32,21 @@ verbose="0"
 # Subroutines
 usage_note()
 {
- echo "The script checks all prerequisites for LMA"
+ echo "The script checks all prerequisites for custom allocator"
  echo "Must be run as root."
  echo "Example: `basename $0` [-v]"
  exit 0
+}
+
+verbose_output()
+{
+  if [ "$verbose" = "1" ]; then
+    echo .
+    echo "$1: $2"
+    if [ ! -z "$3" ]; then
+      echo "$3: $4"
+    fi
+  fi
 }
 
 check_os()
@@ -62,7 +73,7 @@ check_root()
 
 check_lib()
 {
-  printf "Checking LMA installed..."
+  printf "Checking custom allocator installed..."
   if [ "$verbose" = "1" ]; then
     echo .
     if [ -f $LD_PATH1/"lib"$LIB_NAME_BASE".so" ]; then
@@ -94,11 +105,7 @@ check_swap()
     swap_size="`expr $cmd1 \* 1024`"
     ram_size="`sysctl hw.physmem | awk '{ print $2 }'`"
   fi
-  if [ "$verbose" = "1" ]; then
-    echo .
-    echo "RAM size: $ram_size"
-    echo "Swap size: $swap_size"
-  fi
+  verbose_output "RAM size " "$ram_size" "Swap size" "$swap_size"
   if [ "$swap_size" -ge "$ram_size" ]; then
     echo "OK"
   else
@@ -110,10 +117,7 @@ check_thp()
 {
   printf "Checking THP status..."
   cmd="`sysctl vm.nr_hugepages | awk '{ print $3 }'`"
-  if [ "$verbose" = "1" ]; then
-    echo .
-    echo "THP: $cmd"
-  fi
+  verbose_output "THP" "$cmd"
   if [ "$cmd" = "0" ]; then
     echo "OK"
   else
@@ -125,11 +129,7 @@ check_recommended_vm_settings()
 {
   printf "Checking overcommit status..."
   cmd1="`sysctl $SYSCTL_FILE_STR1 | cut -d' ' -f3`"
-  if [ "$verbose" = "1" ]; then
-    echo .
-    echo "Acceptable values: $OVERCOMMIT1 $OVERCOMMIT2"
-    echo "Specified value: $cmd1"
-  fi
+  verbose_output "Acceptable values" "$OVERCOMMIT1 $OVERCOMMIT2" "Specified value" "$cmd1"
   if [ "$cmd1" = "$OVERCOMMIT2" ] || [ "$cmd1" = "$OVERCOMMIT1" ]; then
     echo "OK"
   else
@@ -137,11 +137,7 @@ check_recommended_vm_settings()
   fi
   printf "Checking overcommit ratio..."
   cmd2="`sysctl $SYSCTL_FILE_STR2 | cut -d' ' -f3`"
-  if [ "$verbose" = "1" ]; then
-    echo .
-    echo "Acceptable value: $OVERCOMMIT_RATIO"
-    echo "Specified value: $cmd2"
-  fi
+  verbose_output "Acceptable values" "$OVERCOMMIT_RATIO" "Specified value" "$cmd2"
   if [ "$cmd2" -ge "$OVERCOMMIT_RATIO" ]; then
     echo "OK"
   else
@@ -149,11 +145,7 @@ check_recommended_vm_settings()
   fi
   printf "Checking vfs_cache_pressure..."
   cmd3="`sysctl $SYSCTL_FILE_STR3 | cut -d' ' -f3`"
-  if [ "$verbose" = "1" ]; then
-    echo .
-    echo "Acceptable value: $VFS_CACHE_PRESSURE"
-    echo "Specified value: $cmd3"
-  fi
+  verbose_output "Acceptable values" "$VFS_CACHE_PRESSURE" "Specified value" "$cmd3"
   if [ "$cmd3" -le "$VFS_CACHE_PRESSURE" ]; then
     echo "OK"
   else
@@ -161,11 +153,7 @@ check_recommended_vm_settings()
   fi
   printf "Checking swappiness..."
   cmd4="`sysctl $SYSCTL_FILE_STR4 | cut -d' ' -f3`"
-  if [ "$verbose" = "1" ]; then
-    echo .
-    echo "Acceptable value: $SWAPPINESS"
-    echo "Specified value: $cmd4"
-  fi
+  verbose_output "Acceptable values" "$SWAPPINESS" "Specified value" "$cmd4"
   if [ "$cmd4" -ge "$SWAPPINESS" ]; then
     echo "OK"
   else
