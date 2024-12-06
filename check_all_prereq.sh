@@ -170,18 +170,16 @@ check_ld_conditions()
       res=1
     fi
   elif [ "$os" = "Linux" ]; then
-    if [ ! -z "`ldconfig -p | grep $LIB_NAME_BASE`" ]; then
+#    if [ ! -z "`ldconfig -p | grep $LIB_NAME_BASE`" ]; then
+    if [ ! -z "`ldconfig -p | grep $LD_PATH1`" -o ! -z "`ldconfig -p | grep $LD_PATH2`" ]; then
       res=1
     fi
   elif [ "$os" = "FreeBSD" ]; then
-    if [ ! -z "`ldconfig -r | grep $LIB_NAME_BASE`" ]; then
+    if [ ! -z "`ldconfig -r | grep $LD_PATH1`" -o ! -z "`ldconfig -r | grep $LD_PATH2`" ]; then
       res=1
     fi
   fi
-  if [ "$verbose" = "1" ]; then
-    echo .
-    echo "LD.SO prerequisites: $res"
-  fi
+  verbose_output "LD.SO prerequisites" "$res"
   if [ "$res" = "1" ]; then
     echo "OK"
   else
