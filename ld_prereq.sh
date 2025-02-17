@@ -3,8 +3,8 @@
 #####################################################################################
 ## The script executes ld prerequisites for LMA (Solaris/Linux/FreeBSD).
 ## 
-## Version 1.1
-## Written by Y.Voinov (C) 2022-2023
+## Version 1.2
+## Written by Y.Voinov (C) 2022-2025
 #####################################################################################
 
 # LMA paths. Change if installed different base.
@@ -78,7 +78,7 @@ check_lib()
 
 write_sunos()
 {
-  # If custom config exists, just all dirs.
+  # If custom config exists, just add dirs.
   if [ -f $CRLE_CONF1 ]; then
     crle -c /var/ld/ld.config -u -l $LD_PATH1 -s $LD_PATH1
   else
@@ -89,6 +89,7 @@ write_sunos()
   else
     crle -64 -c /var/ld/64/ld.config -l /lib/64:/usr/lib/64:$LD_PATH -s /lib/secure/64:/usr/lib/secure/64:$LD_PATH2
   fi
+  echo "Note: For global preload make ld.config by youself. -e/-E options should not added automatically"
 }
 
 write_freebsd()
