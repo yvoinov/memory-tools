@@ -5,8 +5,8 @@
 ## service.
 ## Service name specified as script argument (without any suffix, only service name).
 ##
-## Version 1.0
-## Written by Y.Voinov (C) 2024
+## Version 1.1
+## Written by Y.Voinov (C) 2024-2025
 #####################################################################################
 
 # Variables
@@ -20,7 +20,7 @@ LIBRARY_PREFIX="/usr"
 LIBRARY_NAME="libc.so"
 
 # Find libc binary
-LIBC_ABSOLUTE_PATH=`find $LIBRARY_PREFIX -name $LIBRARY_NAME.? -exec file {} \; | grep $BITNESS | cut -d":" -f1`
+LIBC_ABSOLUTE_PATH=`find $LIBRARY_PREFIX -name $LIBRARY_NAME.? -exec file {} \; | grep $BITNESS-bit | cut -d":" -f1`
 CONF_FILE_NAME="override_env.conf"
 
 # Subroutines
