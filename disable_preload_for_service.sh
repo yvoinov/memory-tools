@@ -5,7 +5,7 @@
 ## service.
 ## Service name specified as script argument (without any suffix, only service name).
 ##
-## Version 1.1
+## Version 1.2
 ## Written by Y.Voinov (C) 2024-2025
 #####################################################################################
 
@@ -14,7 +14,7 @@
 SERVICE_NAME=$1
 # Set bitness for all, including libC. 64 by default
 BITNESS=64
-# Library search prefix: from where to find library
+# Allocator library search prefix: from where to find
 LIBRARY_PREFIX="/usr"
 # Set library name to preload
 LIBRARY_NAME="libc.so"
@@ -26,9 +26,11 @@ CONF_FILE_NAME="override_env.conf"
 # Subroutines
 usage_note()
 {
- echo "The script for disable global preload any custom allocator per specified systemd service."
+ echo "The script for disable global preload any custom allocator per specified systemd service"
+ echo "by add preload libC first. To disable per-service preload, use -d option."
  echo "Must be run as root."
- echo "Example: `basename $0` apache2"
+ echo "Example 1: `basename $0` apache2"
+ echo "Example 2: `basename $0` apache2 -d"
  exit 0
 }
 
@@ -56,6 +58,30 @@ check_service()
   fi
 }
 
+disable_preload()
+{
+
+  if [ -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
+    echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d found."
+    if [ -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+      rm -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+      rmdir /usr/lib/systemd/system/$SERVICE_NAME.service.d
+      if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
+        echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d removed."
+      fi
+    fi
+  else
+    echo "ERROR: Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d does not exists."
+    exit 4
+  fi
+}
+
+write_file_content()
+{
+  echo "[Service]" > /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  echo "Environment='LD_PRELOAD=$LIBC_ABSOLUTE_PATH'" >> /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+}
+
 # Main
 if [ -z $SERVICE_NAME ]; then
   usage_note
@@ -68,6 +94,9 @@ if [ "x$*" != "x" ]; then
   for i in $arg_list
   do
     case $i in
+      -d|-D) disable_preload
+             exit 0
+      ;;
       -h|-H|\?) usage_note;;
       *) shift
       ;;
@@ -87,12 +116,16 @@ else
 fi
 
 if [ ! -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
-  echo "[Service]" > /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  echo "Environment='LD_PRELOAD=$LIBC_ABSOLUTE_PATH'" >> /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  write_file_content
   echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
 else
   echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
-  echo "File content: "
+  if [ "`grep alloc.so /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME`" ]; then
+    # Overwrite file content if preload exist
+    write_file_content
+    echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME overwrited."
+  fi
+  echo "New file content:"
   cat /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
   exit 4
 fi
