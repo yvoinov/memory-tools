@@ -10,8 +10,6 @@
 #####################################################################################
 
 # Variables
-# Service name from command line argument
-SERVICE_NAME=$1
 # Set bitness for all, including libC. 64 by default
 BITNESS=64
 # Allocator library search prefix: from where to find
@@ -26,12 +24,12 @@ CONF_FILE_NAME="override_env.conf"
 # Subroutines
 usage_note()
 {
- echo "The script for disable global preload any custom allocator per specified systemd service"
- echo "by add preload libC first. To disable per-service preload, use -d option."
- echo "Must be run as root."
- echo "Example 1: `basename $0` apache2"
- echo "Example 2: `basename $0` apache2 -d"
- exit 0
+  echo "The script for disable global preload any custom allocator per specified systemd service"
+  echo "by add preload libC first. To disable per-service preload, use -d option."
+  echo "Must be run as root."
+  echo "Example 1 (per-service workaround): `basename $0` apache2"
+  echo "Example 2 (completely disable): `basename $0` apache2 -d"
+  exit 0
 }
 
 check_os()
@@ -83,30 +81,45 @@ write_file_content()
 }
 
 # Main
-if [ -z $SERVICE_NAME ]; then
+if [ -z $1 ]; then
   usage_note
 fi
 
-# Parse command line
-if [ "x$*" != "x" ]; then
-  arg_list=$*
-  # Read arguments
-  for i in $arg_list
-  do
-    case $i in
-      -d|-D) disable_preload
-             exit 0
-      ;;
-      -h|-H|\?) usage_note;;
-      *) shift
-      ;;
+disable_full="0"
+SERVICE_NAME=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -d|-D)
+      disable_full="1"
+    ;;
+    -h|-H|\?)
+      usage_note
+    ;;
+    *)
+    # Accumulate to one string
+      if [ -z "$SERVICE_NAME" ]; then
+        SERVICE_NAME=$1
+      else
+        SERVICE_NAME="$SERVICE_NAME $1"
+      fi
+    ;;
     esac
-  done
+    shift
+done
+
+if [ -z $SERVICE_NAME ]; then
+  usage_note
 fi
 
 check_os
 check_root
 check_service
+
+if [ "$disable_full" = "1" ]; then
+  disable_preload
+  exit 0
+fi
 
 if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
   mkdir -p /usr/lib/systemd/system/$SERVICE_NAME.service.d/
