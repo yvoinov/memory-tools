@@ -9,8 +9,6 @@
 #####################################################################################
 
 # Variables
-# Service name from command line argument
-SERVICE_NAME=$1
 # Set bitness for alocator. 64 by default
 BITNESS=64
 # Allocator library search prefix: from where to find
@@ -25,10 +23,10 @@ CONF_FILE_NAME="override_env.conf"
 # Subroutines
 usage_note()
 {
- echo "The script for enable custom allocator preload per specified systemd service."
- echo "Must be run as root."
- echo "Example: `basename $0` clamav-daemon"
- exit 0
+  echo "The script for enable custom allocator preload per specified systemd service."
+  echo "Must be run as root."
+  echo "Example: `basename $0` clamav-daemon"
+  exit 0
 }
 
 check_os()
@@ -56,22 +54,25 @@ check_service()
 }
 
 # Main
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|-H|\?)
+      usage_note
+    ;;
+    *)
+    # Accumulate to one string
+      if [ -z "$SERVICE_NAME" ]; then
+        SERVICE_NAME=$1
+      else
+        SERVICE_NAME="$SERVICE_NAME $1"
+      fi
+    ;;
+    esac
+    shift
+done
+
 if [ -z $SERVICE_NAME ]; then
   usage_note
-fi
-
-# Parse command line
-if [ "x$*" != "x" ]; then
-  arg_list=$*
-  # Read arguments
-  for i in $arg_list
-  do
-    case $i in
-      -h|-H|\?) usage_note;;
-      *) shift
-      ;;
-    esac
-  done
 fi
 
 check_os
