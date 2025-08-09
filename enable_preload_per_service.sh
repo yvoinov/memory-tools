@@ -53,6 +53,14 @@ check_service()
   fi
 }
 
+check_symlink()
+{
+  if [ -z "$ALLOCATOR_SYMLINK_PATH" ]; then
+    echo "ERROR: Symlink to library could not be found."
+    exit 3
+  fi
+}
+
 # Main
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -78,6 +86,7 @@ fi
 check_os
 check_root
 check_service
+check_symlink
 
 if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
   mkdir -p /usr/lib/systemd/system/$SERVICE_NAME.service.d/
