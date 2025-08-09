@@ -4,8 +4,8 @@
 ## The script for enable custom allocator preload per specified systemd service.
 ## Service name specified as script argument (without any suffix, only service name).
 ##
-## Version 1.1
-## Written by Y.Voinov (C) 2024
+## Version 1.2
+## Written by Y.Voinov (C) 2024-2025
 #####################################################################################
 
 # Variables
@@ -13,13 +13,13 @@
 SERVICE_NAME=$1
 # Set bitness for alocator. 64 by default
 BITNESS=64
-# Library search prefix: from where to find library
+# Allocator library search prefix: from where to find
 LIBRARY_PREFIX="/usr/local"
 # Set library name to preload
 LIBRARY_NAME="*alloc.so"
 
-# Find LMA binary
-LMA_SYMLINK_PATH=`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep $BITNESS | cut -d":" -f1`
+# Find allocator binary
+ALLOCATOR_SYMLINK_PATH=`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep $BITNESS | cut -d":" -f1`
 CONF_FILE_NAME="override_env.conf"
 
 # Subroutines
@@ -87,7 +87,7 @@ fi
 
 if [ ! -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
   echo "[Service]" > /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  echo "Environment='LD_PRELOAD=$LMA_SYMLINK_PATH'" >> /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  echo "Environment='LD_PRELOAD=$ALLOCATOR_SYMLINK_PATH'" >> /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
   echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
 else
   echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
