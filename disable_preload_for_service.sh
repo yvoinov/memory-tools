@@ -2,7 +2,7 @@
 
 #####################################################################################
 ## The script for disable global preload any custom allocator per specified systemd
-## service.
+## service or remove per-service allocator preload.
 ## Service name specified as script argument (without any suffix, only service name).
 ##
 ## Version 1.2
