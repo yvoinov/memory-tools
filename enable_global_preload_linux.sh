@@ -1,9 +1,9 @@
 #!/bin/sh
 
 #####################################################################################
-## The script for enable custom allocator global preload.
+## The script for enable non-system allocator global preload. Linux version.
 ##
-## Version 1.0
+## Version 1.1
 ## Written by Y.Voinov (C) 2025
 #####################################################################################
 
@@ -18,12 +18,13 @@ LIBRARY_PREFIX="/usr/local"
 LIBRARY_NAME="*alloc.so"
 
 # Find allocator binary
+# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
 ALLOCATOR_SYMLINK_PATH=`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep $BITNESS | cut -d":" -f1`
 
 # Subroutines
 usage_note()
 {
-  echo "The script for enable custom allocator global preload."
+  echo "The script for enable non-system allocator global preload."
   echo "Make sure you made emergency boot media before use!"
   echo "Must be run as root."
   echo "Example: `basename $0`"
@@ -69,13 +70,36 @@ check_os
 check_root
 check_symlink
 
-echo "############################################################################"
-echo "## WARNING! BEFORE YOU BEGIN, MAKE SURE YOU PREPARE EMERGENCY BOOT MEDIA! ##"
-echo "## Otherwise, your system may become unbootable. Press Enter to continue  ##"
-echo "## or Ctrl+C to cancel.                                                   ##"
-echo "############################################################################"
+if command -v tput >/dev/null 2>&1 && [ -n "$(tput colors)" ]; then
+  RED_BG="$(tput bold; tput setab 1; tput setaf 7)"  # light white on red
+  YEL="$(tput bold; tput setaf 3)"                   # light yellow
+  NC="$(tput sgr0)"                        	     # reset
+else
+  RED_BG=""
+  YEL=""
+  NC=""
+fi
 
-read p
+echo "${RED_BG}##############################################################################${NC}"
+echo "${RED_BG}##${NC} ${YEL}WARNING!!! BEFORE YOU BEGIN, MAKE SURE YOU HAVE EMERGENCY BOOTABLE MEDIA${NC} ${RED_BG}##${NC}"
+echo "${RED_BG}##${NC} ${YEL}PREPARED! Otherwise, your system may become unbootable.${NC}                  ${RED_BG}##${NC}"
+echo "${RED_BG}##${NC}              Press Y to continue or N/Ctrl+C to cancel.                  ${RED_BG}##${NC}"
+echo "${RED_BG}##############################################################################${NC}"
+
+while true; do
+  IFS= read -r ans || exit  # Ctrl+C or EOF
+  case "$ans" in
+    y|Y)
+        break
+        ;;
+    n|N)
+        exit
+        ;;
+    *)
+        printf 'Please answer y/Y or n/N\n'
+        ;;
+  esac
+done
 
 if [ ! -f $PRELOAD_CONF ]; then
   echo $ALLOCATOR_SYMLINK_PATH >> $PRELOAD_CONF
@@ -96,6 +120,6 @@ else
   fi
 fi
 
-echo "Completed. Reboot now to apply changes globally."
+echo "${YEL}Completed. Reboot now to apply changes globally.${NC}"
 
 exit 0

@@ -1,9 +1,9 @@
 #!/bin/sh
 
 #####################################################################################
-## The script for disable custom allocator global preload.
+## The script for disable non-system allocator global preload. Linux version.
 ##
-## Version 1.0
+## Version 1.1
 ## Written by Y.Voinov (C) 2025
 #####################################################################################
 
@@ -18,12 +18,13 @@ LIBRARY_PREFIX="/usr/local"
 LIBRARY_NAME="*alloc.so"
 
 # Find allocator binary
+# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
 ALLOCATOR_SYMLINK_PATH=`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep $BITNESS | cut -d":" -f1`
 
 # Subroutines
 usage_note()
 {
-  echo "The script for disable custom allocator global preload."
+  echo "The script for disable non-system allocator global preload."
   echo "Must be run as root."
   echo "Example: `basename $0`"
   exit 0
