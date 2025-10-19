@@ -25,6 +25,6 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 
 `disable_preload_for_service.sh` allows you to selectively disable global preloading of any non-system allocator for a given systemd service or remove per-service allocator preload (-d option).
 
-`enable_global_preload_linux.sh` enables non-system allocator global preload for Linux.
+`enable_global_preload_linux.sh` enables non-system allocator global preload (Linux).
 
-`disable_global_preload_linux.sh` disables non-system allocator global preload for Linux.
+`disable_global_preload_linux.sh` disables non-system allocator global preload (Linux).
