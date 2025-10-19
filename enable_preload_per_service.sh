@@ -1,10 +1,11 @@
 #!/bin/sh
 
 #####################################################################################
-## The script for enable custom allocator preload per specified systemd service.
+## The script for enable non-system allocator preload per specified systemd service.
 ## Service name specified as script argument (without any suffix, only service name).
+## Linux version.
 ##
-## Version 1.2
+## Version 1.3
 ## Written by Y.Voinov (C) 2024-2025
 #####################################################################################
 
@@ -17,13 +18,14 @@ LIBRARY_PREFIX="/usr/local"
 LIBRARY_NAME="*alloc.so"
 
 # Find allocator binary
+# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
 ALLOCATOR_SYMLINK_PATH=`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep $BITNESS | cut -d":" -f1`
 CONF_FILE_NAME="override_env.conf"
 
 # Subroutines
 usage_note()
 {
-  echo "The script for enable custom allocator preload per specified systemd service."
+  echo "The script for enable non-system allocator preload per specified systemd service."
   echo "Must be run as root."
   echo "Example: `basename $0` clamav-daemon"
   exit 0
