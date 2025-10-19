@@ -1,11 +1,12 @@
 #!/bin/sh
 
 #####################################################################################
-## The script for disable global preload any custom allocator per specified systemd
+## The script for disable global preload any non-system allocator per specified systemd
 ## service or remove per-service allocator preload.
 ## Service name specified as script argument (without any suffix, only service name).
+## Linux version.
 ##
-## Version 1.2
+## Version 1.3
 ## Written by Y.Voinov (C) 2024-2025
 #####################################################################################
 
@@ -24,7 +25,7 @@ CONF_FILE_NAME="override_env.conf"
 # Subroutines
 usage_note()
 {
-  echo "The script for disable global preload any custom allocator per specified systemd service"
+  echo "The script for disable global preload any non-system allocator per specified systemd service"
   echo "by add preload libC first. To disable per-service preload, use -d option."
   echo "Must be run as root."
   echo "Example 1 (per-service workaround): `basename $0` apache2"
