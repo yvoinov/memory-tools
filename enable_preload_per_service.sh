@@ -5,7 +5,7 @@
 ## Service name specified as script argument (without any suffix, only service name).
 ## Linux version.
 ##
-## Version 1.3
+## Version 1.4
 ## Written by Y.Voinov (C) 2024-2025
 #####################################################################################
 
@@ -57,9 +57,11 @@ check_service()
 
 check_symlink()
 {
-  if [ -z "$ALLOCATOR_SYMLINK_PATH" ]; then
-    echo "ERROR: Symlink to library could not be found."
-    exit 3
+  if [ ! -z "$ALLOCATOR_SYMLINK_PATH" -a -f "$ALLOCATOR_SYMLINK_PATH" ]; then
+    echo "Allocator: `ls $ALLOCATOR_SYMLINK_PATH`"
+  else
+    echo "ERROR: Symlink to library could not be found. Check allocator installed."
+    exit 4
   fi
 }
 
