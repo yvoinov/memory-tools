@@ -60,7 +60,8 @@ done
 check_os
 check_root
 
-if [ ! -f $PRELOAD_CONF ]; then
+if [ ! -f $PRELOAD_CONF -o -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
+  echo "$PRELOAD_CONF contents: `cat $PRELOAD_CONF`"
   echo "Disabled already or not enabled. Exiting..."
   exit 0
 else
