@@ -3,7 +3,7 @@
 #####################################################################################
 ## The script for enable non-system allocator global preload. Linux version.
 ##
-## Version 1.1
+## Version 1.2
 ## Written by Y.Voinov (C) 2025
 #####################################################################################
 
@@ -49,9 +49,19 @@ check_root()
 
 check_symlink()
 {
-  if [ -z "$ALLOCATOR_SYMLINK_PATH" ]; then
-    echo "ERROR: Symlink to library could not be found."
+  if [ ! -z "$ALLOCATOR_SYMLINK_PATH" -a -f "$ALLOCATOR_SYMLINK_PATH" ]; then
+    echo "Allocator: `ls $ALLOCATOR_SYMLINK_PATH`"
+  else
+    echo "ERROR: Symlink to library could not be found. Check allocator installed."
     exit 3
+  fi
+}
+
+check_enabled() {
+  if [ ! -f "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
+    echo "$PRELOAD_CONF contents: `cat $PRELOAD_CONF`"
+    echo "ERROR: Global preload already enabled. Exiting..."
+    exit 4
   fi
 }
 
@@ -69,6 +79,7 @@ done
 check_os
 check_root
 check_symlink
+check_enabled
 
 if command -v tput >/dev/null 2>&1 && [ -n "$(tput colors)" ]; then
   RED_BG="$(tput bold; tput setab 1; tput setaf 7)"  # light white on red
