@@ -19,7 +19,7 @@ LIBRARY_NAME="*alloc.so"
 
 # Find allocator binary
 # We assume that there is only one allocator in a given path and it has a corresponding name pattern.
-ALLOCATOR_SYMLINK_PATH=`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep $BITNESS | cut -d":" -f1`
+ALLOCATOR_SYMLINK_PATH="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep $BITNESS | cut -d':' -f1`"
 CONF_FILE_NAME="override_env.conf"
 
 # Subroutines
