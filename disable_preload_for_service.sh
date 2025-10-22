@@ -19,7 +19,7 @@ LIBRARY_PREFIX="/usr"
 LIBRARY_NAME="libc.so"
 
 # Find libc binary
-LIBC_ABSOLUTE_PATH=`find $LIBRARY_PREFIX -name $LIBRARY_NAME.? -exec file {} \; | grep $BITNESS-bit | cut -d":" -f1`
+LIBC_ABSOLUTE_PATH="`find $LIBRARY_PREFIX -name $LIBRARY_NAME.? -exec file {} \; | grep $BITNESS-bit | cut -d':' -f1`"
 CONF_FILE_NAME="override_env.conf"
 
 # Subroutines
