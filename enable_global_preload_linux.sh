@@ -81,10 +81,10 @@ check_root
 check_symlink
 check_enabled
 
-if command -v tput >/dev/null 2>&1 && [ -n "$(tput colors)" ]; then
-  RED_BG="$(tput bold; tput setab 1; tput setaf 7)"  # light white on red
-  YEL="$(tput bold; tput setaf 3)"                   # light yellow
-  NC="$(tput sgr0)"                        	     # reset
+if command -v tput >/dev/null 2>&1 && [ -n "`tput colors`" ]; then
+  RED_BG="`tput bold; tput setab 1; tput setaf 7`"  # light white on red
+  YEL="`tput bold; tput setaf 3`"                   # light yellow
+  NC="`tput sgr0`"                                  # reset
 else
   RED_BG=""
   YEL=""
