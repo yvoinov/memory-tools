@@ -56,6 +56,8 @@ usage_note()
   echo "The script for enable non-system allocator global preload."
   echo "Make sure you made emergency boot media before use!"
   echo "Must be run as root."
+  echo "Options:"
+  echo "  -n, -N, non-interactive mode for automation"
   echo "Example: `basename $0`"
   exit 0
 }
@@ -243,10 +245,16 @@ enable_global_preload()
 }
 
 # Main
+# Defaults
+non_interactive="0"
+
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|-H|\?)
       usage_note
+    ;;
+    -n|-N)
+      non_interactive="1"
     ;;
     *) shift
     ;;
@@ -258,37 +266,39 @@ check_root
 check_symlink
 check_enabled
 
-if command -v tput >/dev/null 2>&1 && [ -n "`tput colors`" ]; then
-  RED_BG="`tput bold; tput setab 1; tput setaf 7`"  # light white on red
-  YEL="`tput bold; tput setaf 3`"                   # light yellow
-  NC="`tput sgr0`"                                  # reset
-else
-  RED_BG=""
-  YEL=""
-  NC=""
-fi
+if [ "$non_interactive" = "0" ]; then
+  if command -v tput >/dev/null 2>&1 && [ -n "`tput colors`" ]; then
+    RED_BG="`tput bold; tput setab 1; tput setaf 7`"  # light white on red
+    YEL="`tput bold; tput setaf 3`"                   # light yellow
+    NC="`tput sgr0`"                                  # reset
+  else
+    RED_BG=""
+    YEL=""
+    NC=""
+  fi
 
-echo
-echo "${RED_BG}##############################################################################${NC}"
-echo "${RED_BG}##${NC} ${YEL}WARNING!!! BEFORE YOU BEGIN, MAKE SURE YOU HAVE EMERGENCY BOOTABLE MEDIA${NC} ${RED_BG}##${NC}"
-echo "${RED_BG}##${NC} ${YEL}PREPARED! Otherwise, your system may become unbootable.${NC}                  ${RED_BG}##${NC}"
-echo "${RED_BG}##${NC}              Press Y to continue or N/Ctrl+C to cancel.                  ${RED_BG}##${NC}"
-echo "${RED_BG}##############################################################################${NC}"
+  echo
+  echo "${RED_BG}##############################################################################${NC}"
+  echo "${RED_BG}##${NC} ${YEL}WARNING!!! BEFORE YOU BEGIN, MAKE SURE YOU HAVE EMERGENCY BOOTABLE MEDIA${NC} ${RED_BG}##${NC}"
+  echo "${RED_BG}##${NC} ${YEL}PREPARED! Otherwise, your system may become unbootable.${NC}                  ${RED_BG}##${NC}"
+  echo "${RED_BG}##${NC}              Press Y to continue or N/Ctrl+C to cancel.                  ${RED_BG}##${NC}"
+  echo "${RED_BG}##############################################################################${NC}"
 
-while true; do
-  IFS= read ans || exit  # Ctrl+C or EOF
-  case "$ans" in
-    y|Y)
-        break
-        ;;
-    n|N)
-        exit
-        ;;
-    *)
+  while true; do
+    IFS= read ans || exit  # Ctrl+C or EOF
+    case "$ans" in
+      y|Y)
+          break
+      ;;
+      n|N)
+          exit
+      ;;
+      *)
         printf 'Please answer y/Y or n/N\n'
-        ;;
-  esac
-done
+      ;;
+    esac
+  done
+fi
 
 check_and_set_runtime
 check_and_set_trusted_paths
