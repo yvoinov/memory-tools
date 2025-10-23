@@ -30,14 +30,14 @@ ALLOCATOR_SYMLINK_PATH_64="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file 
 # OpenIndiana
 OI_RUNTIME_32="/usr/gcc/14/lib"
 OI_RUNTIME_64_X86="/usr/gcc/14/lib/amd64"
-OI_RUNTIME_64_SPARC="/usr/gcc/14/lib/sparc"
+OI_RUNTIME_64_SPARC="/usr/gcc/14/lib/sparcv9"
 # OmniOS
 OMNI_RUNTIME_32="/usr/gcc/14/lib"
 OMNI_RUNTIME_64="/usr/gcc/14/lib/64"
 # Solaris 10
 SOL10_RUNTIME_32="/opt/csw/lib"
 SOL10_RUNTIME_64_X86="/opt/csw/lib/amd64"
-SOL10_RUNTIME_64_SPARC="/opt/csw/lib/sparc"
+SOL10_RUNTIME_64_SPARC="/opt/csw/lib/sparcv9"
 # Solaris 11
 SOL11_RUNTIME_32="/usr/gcc/7/lib"
 SOL11_RUNTIME_64_X86="/usr/gcc/7/lib/amd64"
