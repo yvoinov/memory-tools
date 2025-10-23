@@ -32,3 +32,7 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 `enable_global_preload_solaris.sh` enables non-system allocator global preload (Solaris/OpenIndiana/OmniOS).
 
 `disable_global_preload_solaris.sh` disables non-system allocator global preload (Solaris/OpenIndiana/OmniOS).
+
+`enable_global_preload_aix.sh` enables non-system allocator global preload (AIX).
+
+`disable_global_preload_aix.sh` disables non-system allocator global preload (AIX).
