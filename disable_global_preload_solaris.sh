@@ -26,6 +26,10 @@ usage_note()
 {
   echo "The script for disable non-system allocator global preload."
   echo "Must be run as root."
+  echo "Options:"
+  echo "    -c, -C	Clears configs if previous ones were not saved."
+  echo "                This means that there were no configurations"
+  echo"                 other than the default."
   echo "Example: `basename $0`"
   exit 0
 }
@@ -90,6 +94,7 @@ check_enabled() {
 
 disable_global_preload()
 {
+  cleanup_requested=$1
   if [ "`check_ld_config_32`" = "1" ]; then
     # Get current libraries paths
     default_search_path_32="`crle 2>/dev/null | grep 'Default Library Path' | sed 's/^[^:]*:[ 	]*//; s/[ 	]*(.*)//; s/[ 	]*$//'`"
@@ -101,24 +106,34 @@ disable_global_preload()
     secure_lib_search_path_64="`crle -64 2>/dev/null | grep 'Trusted Directories' | sed 's/^[^:]*:[ 	]*//; s/[ 	]*(.*)//; s/[ 	]*$//'`"
     crle -64 -c $PRELOAD_CONF_64 -l $default_search_path_64 -s $secure_lib_search_path_64
   fi
-  # If no saved previous config, just remove ld.config
-  if [ -f "$PRELOAD_CONF_32.orig" ]; then
-    mv "$PRELOAD_CONF_32.orig" "$PRELOAD_CONF_32"
-  else
-    rm -f "$PRELOAD_CONF_32"
-  fi
-  if [ -f "$PRELOAD_CONF_64.orig" ]; then
-    mv "$PRELOAD_CONF_64.orig" "$PRELOAD_CONF_64"
-  else
-    rm -f "$PRELOAD_CONF_64"
+  if [ "$cleanup_requested" = "1" ]; then
+    # If no saved previous config, just remove ld.config with backup
+    if [ -f "$PRELOAD_CONF_32.orig" ]; then
+      mv "$PRELOAD_CONF_32.orig" "$PRELOAD_CONF_32"
+    else
+      cp "$PRELOAD_CONF_32" "$PRELOAD_CONF_32.backup"
+      rm -f "$PRELOAD_CONF_32"
+    fi
+    if [ -f "$PRELOAD_CONF_64.orig" ]; then
+      mv "$PRELOAD_CONF_64.orig" "$PRELOAD_CONF_64"
+    else
+      cp "$PRELOAD_CONF_64" "$PRELOAD_CONF_64.backup"
+      rm -f "$PRELOAD_CONF_64"
+    fi
   fi
 }
 
 # Main
+# Defaults
+cleanup_configs="0"
+
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|-H|\?)
       usage_note
+    ;;
+    -c|-C)
+      cleanup_configs="1"
     ;;
     *) shift
     ;;
@@ -128,7 +143,7 @@ done
 check_os
 check_root
 check_enabled
-disable_global_preload
+disable_global_preload $cleanup_configs
 
 echo "Completed. Reboot now to apply changes globally."
 
