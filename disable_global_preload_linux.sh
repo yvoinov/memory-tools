@@ -55,31 +55,37 @@ check_root()
 disable_global_preload()
 {
   remove_link=$1
-  if [ ! -f $PRELOAD_CONF -o -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
-    echo "$PRELOAD_CONF contents: `cat $PRELOAD_CONF`"
-    echo "Disabled already or not enabled. Exiting..."
-    exit 0
+  allocator_link=""
+  if [ "$remove_link" = "1" ]; then
+    get_lib_name="`readlink -f $ALLOCATOR_SYMLINK_PATH`"
+    get_dirname="`find /usr -name libc.so -exec dirname {} \;`"
+    get_link_name="`basename $get_lib_name | cut -d'.' -f1-3`"
+    allocator_link="$get_dirname/$get_link_name"
   else
-    if [ ! -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
-      chattr -i $PRELOAD_CONF
-      mv $PRELOAD_CONF $PRELOAD_CONF.orig
-      echo "File $PRELOAD_CONF renamed to $PRELOAD_CONF.orig."
-      if [ "$remove_link" = "1" ]; then
-        get_lib_name="`readlink -f $ALLOCATOR_SYMLINK_PATH`"
-        get_dirname="`find /usr -name libc.so -exec dirname {} \;`"
-        get_link_name="`basename $get_lib_name | cut -d'.' -f1-3`"
-        if [ -f "$get_dirname/$get_link_name" ]; then
-          unlink $get_dirname/$get_link_name
-        else
-          echo "INFO: Hard link not found."
-        fi
-      fi
+    allocator_link="$ALLOCATOR_SYMLINK_PATH"
+  fi
+
+  if [ -f $PRELOAD_CONF ] && [ -z "`cat $PRELOAD_CONF | grep $allocator_link`" ]; then
+    echo "$PRELOAD_CONF contents: `cat $PRELOAD_CONF`"
+    echo "Disabled already or not enabled."
+  elif [ -f $PRELOAD_CONF ] && [ ! -z "`cat $PRELOAD_CONF | grep $allocator_link`" ]; then
+    chattr -i $PRELOAD_CONF
+    mv $PRELOAD_CONF $PRELOAD_CONF.orig
+    echo "File $PRELOAD_CONF renamed to $PRELOAD_CONF.orig."
+  else
+    echo "File $PRELOAD_CONF not exists."
+    echo "Disabled already or not enabled."
+  fi
+
+  if [ "$remove_link" = "1" ]; then
+    get_lib_name="`readlink -f $allocator_link`"
+    get_dirname="`find /usr -name libc.so -exec dirname {} \;`"
+    get_link_name="`basename $get_lib_name | cut -d'.' -f1-3`"
+    if [ -f "$get_dirname/$get_link_name" ]; then
+      unlink $get_dirname/$get_link_name
+      echo "Hard link $get_dirname/$get_link_name unlinked."
     else
-      echo "File $PRELOAD_CONF exists."
-      echo "File content: "
-      cat $PRELOAD_CONF
-      echo "Disabled already or not enabled. Exiting..."
-      exit 0
+      echo "Hard link $get_dirname/$get_link_name not found."
     fi
   fi
 }
