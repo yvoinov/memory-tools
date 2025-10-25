@@ -4,7 +4,7 @@
 ## The script sets up LMA OS-wide performance prerequisites.
 ##
 ## Version 1.2
-## Written by Y.Voinov (C) 2022-2023
+## Written by Y.Voinov (C) 2022-2025
 #####################################################################################
 
 # Sysctl config path
@@ -32,10 +32,12 @@ SYSCTL_STR5_EXIST=""
 # Subroutines
 usage_note()
 {
- echo "The script sets up LMA OS-wide prerequisites."
- echo "Reboot is recommended, but non-required. Must be run as root."
- echo "Example: `basename $0`"
- exit 0
+  echo "The script sets up LMA OS-wide prerequisites."
+  echo "Reboot is recommended, but non-required. Must be run as root."
+  echo "Usage: `basename $0` [options]"
+  echo "Options:"
+  echo "    -h, -H, ?   show this help"
+  exit 0
 }
 
 check_os()
