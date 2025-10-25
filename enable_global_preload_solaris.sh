@@ -56,9 +56,9 @@ usage_note()
   echo "The script for enable non-system allocator global preload."
   echo "Make sure you made emergency boot media before use!"
   echo "Must be run as root."
+  echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "  -n, -N, non-interactive mode for automation"
-  echo "Example: `basename $0`"
   exit 0
 }
 
