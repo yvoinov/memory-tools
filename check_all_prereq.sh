@@ -4,7 +4,7 @@
 ## The script checks all prerequisites for custom allocator
 ##
 ## Version 1.2
-## Written by Y.Voinov (C) 2023-2024
+## Written by Y.Voinov (C) 2023-2025
 #####################################################################################
 
 # Allocator install paths. Change if installed different base.
@@ -32,10 +32,13 @@ verbose="0"
 # Subroutines
 usage_note()
 {
- echo "The script checks all prerequisites for custom allocator"
- echo "Must be run as root."
- echo "Example: `basename $0` [-v]"
- exit 0
+  echo "The script checks all prerequisites for custom allocator"
+  echo "Must be run as root."
+  echo "Usage: `basename $0` [options]"
+  echo "Options:"
+  echo "    -v, -V	Verbose. Show details."
+  echo "    -h, -H, ?   show this help"
+  exit 0
 }
 
 verbose_output()
@@ -195,8 +198,10 @@ if [ "x$*" != "x" ]; then
   for i in $arg_list
   do
     case $i in
-     -v|-V) verbose="1";;
-     -h|-H|\?) usage_note;;
+     -v|-V) verbose="1"
+     ;;
+     -h|-H|\?) usage_note
+     ;;
      *) shift
      ;;
     esac
