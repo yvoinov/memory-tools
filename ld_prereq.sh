@@ -29,10 +29,12 @@ CRLE_CONF2="/var/ld/64/ld.config"
 # Subroutines
 usage_note()
 {
- echo "The script executes ld prerequisites for LMA (Solaris/Linux/FreeBSD)."
- echo "Must be run as root."
- echo "Example: `basename $0`"
- exit 0
+  echo "The script executes ld prerequisites for LMA (Solaris/Linux/FreeBSD)."
+  echo "Must be run as root."
+  echo "Usage: `basename $0` [options]"
+  echo "Options:"
+  echo "    -h, -H, ?   show this help"
+  exit 0
 }
 
 check_os()
