@@ -27,6 +27,9 @@ usage_note()
 {
   echo "The script for enable non-system allocator preload per specified systemd service."
   echo "Must be run as root."
+  echo "Usage: `basename $0` <service-name> [options]"
+  echo "Options:"
+  echo "    -h, -H, ?   show this help"
   echo "Example: `basename $0` clamav-daemon"
   exit 0
 }
