@@ -6,7 +6,7 @@
 ## To turn it back on, do systemctl disable disable-thp && systemctl stop disable-thp
 ## 
 ## Version 1.1
-## Written by Y.Voinov (C) 2022-2023
+## Written by Y.Voinov (C) 2022-2025
 #####################################################################################
 
 # Path to write unit
@@ -23,10 +23,12 @@ VALUE_PATH_RH="redhat_transparent_hugepage"
 # Subroutines
 usage_note()
 {
- echo "The script creates and installs a service that disables THP on Linux."
- echo "Just run it and reboot system. Must be run as root."
- echo "Example: `basename $0` && reboot"
- exit 0
+  echo "The script creates and installs a service that disables THP on Linux."
+  echo "Just run it and reboot system. Must be run as root."
+  echo "Usage: `basename $0` [options]"
+  echo "Options:"
+  echo "    -h, -H, ?   show this help"
+  exit 0
 }
 
 check_os()
