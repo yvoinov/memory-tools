@@ -4,7 +4,7 @@
 ## The script sets up the service to manage THP (Transparent Huge Pages) on Linux.
 ## After installation and reboot, THP will be turned off globally.
 ## To turn it back on, do systemctl disable disable-thp && systemctl stop disable-thp
-## 
+##
 ## Version 1.1
 ## Written by Y.Voinov (C) 2022-2025
 #####################################################################################
@@ -78,8 +78,11 @@ if [ "x$*" != "x" ]; then
   for i in $arg_list
   do
     case $i in
-      -h|-H|\?) usage_note;;
-      *) shift
+      -h|-H|\?)
+        usage_note
+      ;;
+      *)
+        shift
       ;;
     esac
   done
