@@ -28,6 +28,10 @@ usage_note()
   echo "The script for disable global preload any non-system allocator per specified systemd service"
   echo "by add preload libC first. To disable per-service preload, use -d option."
   echo "Must be run as root."
+  echo "Usage: `basename $0` <service_name> [options]"
+  echo "Options:"
+  echo "    -d, -D      disable preload and remove drop-in completely"
+  echo "    -h, -H, ?   show this help"
   echo "Example 1 (per-service workaround): `basename $0` apache2"
   echo "Example 2 (completely disable): `basename $0` apache2 -d"
   exit 0
