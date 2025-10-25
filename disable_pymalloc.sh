@@ -6,7 +6,7 @@
 ## prevent segfaults.
 ##
 ## Version 1.3
-## Written by Y.Voinov (C) 2022-2024
+## Written by Y.Voinov (C) 2022-2025
 #####################################################################################
 
 # Global environment file
@@ -15,10 +15,12 @@ GLOBAL_ENV="/etc/environment"
 # Subroutines
 usage_note()
 {
- echo "The script sets PYTHONMALLOC to use libC on Linux."
- echo "Just run it and reboot system. Must be run as root."
- echo "Example: `basename $0` && reboot"
- exit 0
+  echo "The script sets PYTHONMALLOC to use libC on Linux."
+  echo "Just run it and reboot system. Must be run as root."
+  echo "Usage: `basename $0` [options]"
+  echo "Options:"
+  echo "    -h, -H, ?   show this help"
+  exit 0
 }
 
 check_os()
