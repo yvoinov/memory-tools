@@ -248,18 +248,24 @@ enable_global_preload()
 # Defaults
 non_interactive="0"
 
-while [ $# -gt 0 ]; do
-  case "$1" in
-    -h|-H|\?)
-      usage_note
-    ;;
-    -n|-N)
-      non_interactive="1"
-    ;;
-    *) shift
-    ;;
+ # Parse command line
+if [ "x$*" != "x" ]; then
+  arg_list=$*
+  # Read arguments
+  for i in $arg_list
+  do
+    case $i in
+      -h|-H|\?)
+        usage_note
+      ;;
+      -n|-N)
+        non_interactive="1"
+      ;;
+      *) shift
+      ;;
     esac
-done
+  done
+fi
 
 check_os 1  # Output OS to screen
 check_root
