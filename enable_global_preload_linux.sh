@@ -31,6 +31,9 @@ usage_note()
   echo "Options:"
   echo "  -n, -N, non-interactive mode for automation"
   echo "  -l, -L  make hard link in system libs"
+  echo
+  echo "Note: A hard link to the allocator in the system directory"
+  echo "      is required for services restricted by the sandbox."
   exit 0
 }
 
