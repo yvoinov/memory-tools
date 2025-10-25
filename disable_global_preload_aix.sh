@@ -25,7 +25,9 @@ usage_note()
 {
   echo "The script for disable non-system allocator global preload."
   echo "Must be run as root."
-  echo "Example: `basename $0`"
+  echo "Usage: `basename $0` [options]"
+  echo "Options:"
+  echo "    -h, -H, ?   show this help"
   exit 0
 }
 
