@@ -26,11 +26,12 @@ usage_note()
 {
   echo "The script for disable non-system allocator global preload."
   echo "Must be run as root."
+  echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "    -c, -C	Clears configs if previous ones were not saved."
   echo "                This means that there were no configurations"
   echo"                 other than the default."
-  echo "Example: `basename $0`"
+  echo "    -h, -H, ?   show this help"
   exit 0
 }
 
