@@ -57,6 +57,13 @@ enable_global_preload()
 {
   make_link=$1
   allocator_link=""
+  if [ ! -z "$ALLOCATOR_SYMLINK_PATH" -a -f "$ALLOCATOR_SYMLINK_PATH" ]; then
+    echo "Allocator: `ls $ALLOCATOR_SYMLINK_PATH`"
+  else
+    echo "ERROR: Symlink to library could not be found. Check allocator installed."
+    exit 3
+  fi
+
   if [ "$make_link" = "1" ]; then
     get_lib_name="`readlink -f $ALLOCATOR_SYMLINK_PATH`"
     get_dirname="`find /usr -name libc.so -exec dirname {} \;`"
@@ -71,13 +78,6 @@ enable_global_preload()
     allocator_link="$get_dirname/$get_link_name"
   else
     allocator_link="$ALLOCATOR_SYMLINK_PATH"
-  fi
-
-  if [ ! -z "$ALLOCATOR_SYMLINK_PATH" -a -f "$ALLOCATOR_SYMLINK_PATH" ]; then
-    echo "Allocator: `ls $ALLOCATOR_SYMLINK_PATH`"
-  else
-    echo "ERROR: Symlink to library could not be found. Check allocator installed."
-    exit 3
   fi
 
   if [ -f "$PRELOAD_CONF" ] && [ ! -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
