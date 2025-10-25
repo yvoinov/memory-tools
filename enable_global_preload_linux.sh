@@ -10,7 +10,7 @@
 # Variables
 # Global preload config
 PRELOAD_CONF="/etc/ld.so.preload"
-# Set bitness for alocator. 64 by default
+# Set bitness for allocator. 64 by default
 BITNESS=64
 # Allocator library search prefix: from where to find
 LIBRARY_PREFIX="/usr/local"
@@ -30,6 +30,7 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "  -n, -N, non-interactive mode for automation"
+  echo "  -l, -L  make hard link in system libs"
   exit 0
 }
 
@@ -69,15 +70,32 @@ check_enabled() {
 
 enable_global_preload()
 {
+  make_link=$1
+  allocator_link=""
+  if [ "$make_link" = "1" ]; then
+    get_lib_name="`readlink -f $ALLOCATOR_SYMLINK_PATH`"
+    get_dirname="`find /usr -name libc.so -exec dirname {} \;`"
+    get_link_name="`basename $get_lib_name | cut -d'.' -f1-3`"
+    # Make hardlink
+    if [ ! -f $get_dirname/$get_link_name ];  then
+      ln $get_dirname/$get_link_name $get_libname
+    else
+      echo "Link $get_dirname/$get_link_name exists."
+    fi
+    allocator_link="$get_dirname/$get_linkmane"
+  else
+    allocator_link="$ALLOCATOR_SYMLINK_PATH"
+  fi
+
   if [ ! -f $PRELOAD_CONF ]; then
-    echo $ALLOCATOR_SYMLINK_PATH >> $PRELOAD_CONF
+    echo $allocator_link >> $PRELOAD_CONF
     echo "File $PRELOAD_CONF created."
     chattr +i $PRELOAD_CONF
   else
     if [ ! -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
       tmp_buf="`cat $PRELOAD_CONF`"
       chattr -i $PRELOAD_CONF
-      echo $ALLOCATOR_SYMLINK_PATH":"$tmp_buf >> $PRELOAD_CONF
+      echo $allocator_link":"$tmp_buf >> $PRELOAD_CONF
       echo "File $PRELOAD_CONF updated."
       chattr +i $PRELOAD_CONF
     else
@@ -87,24 +105,34 @@ enable_global_preload()
       exit 5
     fi
   fi
-}
+ }
 
 # Main
 # Defaults
 non_interactive="0"
+make_hard_link="0"
 
-while [ $# -gt 0 ]; do
-  case "$1" in
-    -h|-H|\?)
-      usage_note
-    ;;
-    -n|-N)
-      non_interactive="1"
-    ;;
-    *) shift
-    ;;
+ # Parse command line
+if [ "x$*" != "x" ]; then
+  arg_list=$*
+  # Read arguments
+  for i in $arg_list
+  do
+    case $i in
+      -h|-H|\?)
+        usage_note
+      ;;
+      -n|-N)
+        non_interactive="1"
+      ;;
+      -l|-L)
+        make_hard_link="1"
+      ;;
+      *) shift
+      ;;
     esac
-done
+  done
+fi
 
 check_os
 check_root
@@ -144,7 +172,7 @@ if [ "$non_interactive" = "0" ]; then
   done
 fi
 
-enable_global_preload
+enable_global_preload $make_hard_link
 
 echo "${YEL}Completed. Reboot now to apply changes globally.${NC}"
 
