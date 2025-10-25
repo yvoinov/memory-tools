@@ -29,6 +29,10 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "    -h, -H, ?   show this help"
+  echo "    -u, -U, ?   unlink hard link if exists"
+  echo
+  echo "Note: A hard link to the allocator in the system directory"
+  echo "      is required for services restricted by the sandbox."
   exit 0
 }
 
@@ -48,7 +52,42 @@ check_root()
   fi
 }
 
+disable_global_preload()
+{
+  remove_link=$1
+  if [ ! -f $PRELOAD_CONF -o -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
+    echo "$PRELOAD_CONF contents: `cat $PRELOAD_CONF`"
+    echo "Disabled already or not enabled. Exiting..."
+    exit 0
+  else
+    if [ ! -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
+      chattr -i $PRELOAD_CONF
+      mv $PRELOAD_CONF $PRELOAD_CONF.orig
+      echo "File $PRELOAD_CONF renamed to $PRELOAD_CONF.orig."
+      if [ "$remove_link" = "1" ]; then
+        get_lib_name="`readlink -f $ALLOCATOR_SYMLINK_PATH`"
+        get_dirname="`find /usr -name libc.so -exec dirname {} \;`"
+        get_link_name="`basename $get_lib_name | cut -d'.' -f1-3`"
+        if [ -f "$get_dirname/$get_link_name" ]; then
+          unlink $get_dirname/$get_link_name
+        else
+          echo "INFO: Hard link not found."
+        fi
+      fi
+    else
+      echo "File $PRELOAD_CONF exists."
+      echo "File content: "
+      cat $PRELOAD_CONF
+      echo "Disabled already or not enabled. Exiting..."
+      exit 0
+    fi
+  fi
+}
+
 # Main
+# Defaults
+unlink_hard_link="0"
+
  # Parse command line
 if [ "x$*" != "x" ]; then
   arg_list=$*
@@ -59,6 +98,9 @@ if [ "x$*" != "x" ]; then
       -h|-H|\?)
         usage_note
       ;;
+      -u|-U)
+        unlink_hard_link="1"
+      ;;
       *) shift
       ;;
     esac
@@ -68,23 +110,7 @@ fi
 check_os
 check_root
 
-if [ ! -f $PRELOAD_CONF -o -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
-  echo "$PRELOAD_CONF contents: `cat $PRELOAD_CONF`"
-  echo "Disabled already or not enabled. Exiting..."
-  exit 0
-else
-  if [ ! -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
-    chattr -i $PRELOAD_CONF
-    mv $PRELOAD_CONF $PRELOAD_CONF.orig
-    echo "File $PRELOAD_CONF renamed to $PRELOAD_CONF.orig."
-  else
-    echo "File $PRELOAD_CONF exists."
-    echo "File content: "
-    cat $PRELOAD_CONF
-    echo "Disabled already or not enabled. Exiting..."
-    exit 0
-  fi
-fi
+disable_global_preload $unlink_hard_link
 
 echo "Completed. Reboot now to apply changes globally."
 
