@@ -48,15 +48,21 @@ check_root()
 }
 
 # Main
-while [ $# -gt 0 ]; do
-  case "$1" in
-    -h|-H|\?)
-      usage_note
-    ;;
-    *) shift
-    ;;
+ # Parse command line
+if [ "x$*" != "x" ]; then
+  arg_list=$*
+  # Read arguments
+  for i in $arg_list
+  do
+    case $i in
+      -h|-H|\?)
+        usage_note
+      ;;
+      *) shift
+      ;;
     esac
-done
+  done
+fi
 
 check_os
 check_root
