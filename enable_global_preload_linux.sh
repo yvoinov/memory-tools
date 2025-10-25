@@ -53,24 +53,6 @@ check_root()
   fi
 }
 
-check_symlink()
-{
-  if [ ! -z "$ALLOCATOR_SYMLINK_PATH" -a -f "$ALLOCATOR_SYMLINK_PATH" ]; then
-    echo "Allocator: `ls $ALLOCATOR_SYMLINK_PATH`"
-  else
-    echo "ERROR: Symlink to library could not be found. Check allocator installed."
-    exit 3
-  fi
-}
-
-check_enabled() {
-  if [ ! -f "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
-    echo "$PRELOAD_CONF contents: `cat $PRELOAD_CONF`"
-    echo "ERROR: Global preload already enabled. Exiting..."
-    exit 4
-  fi
-}
-
 enable_global_preload()
 {
   make_link=$1
@@ -80,14 +62,28 @@ enable_global_preload()
     get_dirname="`find /usr -name libc.so -exec dirname {} \;`"
     get_link_name="`basename $get_lib_name | cut -d'.' -f1-3`"
     # Make hardlink
-    if [ ! -f $get_dirname/$get_link_name ];  then
-      ln $get_dirname/$get_link_name $get_libname
+    if [ ! -f $get_dirname/$get_link_name ]; then
+      ln $get_lib_name "$get_dirname/$get_link_name"
+      echo "Hard link $get_dirname/$get_link_name created."
     else
-      echo "Link $get_dirname/$get_link_name exists."
-    fi
-    allocator_link="$get_dirname/$get_linkmane"
+      echo "Hard link $get_dirname/$get_link_name already exists."
+   fi
+    allocator_link="$get_dirname/$get_link_name"
   else
     allocator_link="$ALLOCATOR_SYMLINK_PATH"
+  fi
+
+  if [ ! -z "$ALLOCATOR_SYMLINK_PATH" -a -f "$ALLOCATOR_SYMLINK_PATH" ]; then
+    echo "Allocator: `ls $ALLOCATOR_SYMLINK_PATH`"
+  else
+    echo "ERROR: Symlink to library could not be found. Check allocator installed."
+    exit 3
+  fi
+
+  if [ -f "$PRELOAD_CONF" ] && [ ! -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
+    echo "$PRELOAD_CONF contents: `cat $PRELOAD_CONF`"
+    echo "ERROR: Global preload already enabled. Exiting..."
+    exit 4
   fi
 
   if [ ! -f $PRELOAD_CONF ]; then
@@ -95,7 +91,7 @@ enable_global_preload()
     echo "File $PRELOAD_CONF created."
     chattr +i $PRELOAD_CONF
   else
-    if [ ! -z "`cat $PRELOAD_CONF | grep $ALLOCATOR_SYMLINK_PATH`" ]; then
+    if [ ! -z "`cat $PRELOAD_CONF | grep $allocator_link`" ]; then
       tmp_buf="`cat $PRELOAD_CONF`"
       chattr -i $PRELOAD_CONF
       echo $allocator_link":"$tmp_buf >> $PRELOAD_CONF
@@ -108,7 +104,7 @@ enable_global_preload()
       exit 5
     fi
   fi
- }
+}
 
 # Main
 # Defaults
@@ -139,8 +135,6 @@ fi
 
 check_os
 check_root
-check_symlink
-check_enabled
 
 if [ "$non_interactive" = "0" ]; then
   if command -v tput >/dev/null 2>&1 && [ -n "`tput colors`" ]; then
