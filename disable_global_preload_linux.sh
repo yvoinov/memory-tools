@@ -55,7 +55,6 @@ check_root()
 disable_global_preload()
 {
   remove_link=$1
-  allocator_link=""
   if [ "$remove_link" = "1" ]; then
     get_lib_name="`readlink -f $ALLOCATOR_SYMLINK_PATH`"
     get_dirname="`find /usr -name 'libc.so.*' -exec file {} \; | grep $BITNESS | grep 'ELF' | cut -d: -f1 | { read f && dirname "$f"; }`"
