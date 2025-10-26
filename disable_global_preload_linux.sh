@@ -78,9 +78,6 @@ disable_global_preload()
   fi
 
   if [ "$remove_link" = "1" ]; then
-    get_lib_name="`readlink -f $allocator_link`"
-    get_dirname="`find /usr -name 'libc.so.*' -exec file {} \; | grep $BITNESS | grep 'ELF' | cut -d: -f1 | { read f && dirname "$f"; }`"
-    get_link_name="`basename $get_lib_name | cut -d'.' -f1-3`"
     if [ -f "$get_dirname/$get_link_name" ]; then
       unlink $get_dirname/$get_link_name
       echo "Hard link $get_dirname/$get_link_name unlinked."
