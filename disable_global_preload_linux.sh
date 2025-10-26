@@ -58,14 +58,14 @@ disable_global_preload()
   allocator_link=""
   if [ "$remove_link" = "1" ]; then
     get_lib_name="`readlink -f $ALLOCATOR_SYMLINK_PATH`"
-    get_dirname="`find /usr -name libc.so -exec dirname {} \;`"
+    get_dirname="`find /usr -name 'libc.so.*' -exec file {} \; | grep $BITNESS | grep 'ELF' | cut -d: -f1 | { read f && dirname "$f"; }`"
     get_link_name="`basename $get_lib_name | cut -d'.' -f1-3`"
     allocator_link="$get_dirname/$get_link_name"
   else
     allocator_link="$ALLOCATOR_SYMLINK_PATH"
   fi
 
-  if [ -f $PRELOAD_CONF ] && [ -z "`cat $PRELOAD_CONF | grep $allocator_link`" ]; then
+  if [ -f $PRELOAD_CONF ] && [ -z "`cat $PRELOAD_CONF | grep $allocator_link`" ]; then 
     echo "$PRELOAD_CONF contents: `cat $PRELOAD_CONF`"
     echo "Disabled already or not enabled."
   elif [ -f $PRELOAD_CONF ] && [ ! -z "`cat $PRELOAD_CONF | grep $allocator_link`" ]; then
@@ -79,7 +79,7 @@ disable_global_preload()
 
   if [ "$remove_link" = "1" ]; then
     get_lib_name="`readlink -f $allocator_link`"
-    get_dirname="`find /usr -name libc.so -exec dirname {} \;`"
+    get_dirname="`find /usr -name 'libc.so.*' -exec file {} \; | grep $BITNESS | grep 'ELF' | cut -d: -f1 | { read f && dirname "$f"; }`"
     get_link_name="`basename $get_lib_name | cut -d'.' -f1-3`"
     if [ -f "$get_dirname/$get_link_name" ]; then
       unlink $get_dirname/$get_link_name
