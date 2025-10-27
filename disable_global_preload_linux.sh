@@ -3,7 +3,7 @@
 #####################################################################################
 ## The script for disable non-system allocator global preload. Linux version.
 ##
-## Version 1.1
+## Version 1.3
 ## Written by Y.Voinov (C) 2025
 #####################################################################################
 
@@ -30,6 +30,7 @@ usage_note()
   echo "Options:"
   echo "    -h, -H, ?   show this help"
   echo "    -u, -U, ?   unlink hard link if exists"
+  echo "    -32         disable 32 bit allocator preload on 32 bit OS"
   echo
   echo "Note: A hard link to the allocator in the system directory"
   echo "      is required for services restricted by the sandbox."
@@ -102,6 +103,9 @@ if [ "x$*" != "x" ]; then
       ;;
       -u|-U)
         unlink_hard_link="1"
+      ;;
+      -32)
+        BITNESS=32
       ;;
       *) shift
       ;;
