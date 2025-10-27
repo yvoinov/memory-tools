@@ -3,7 +3,7 @@
 #####################################################################################
 ## The script for enable non-system allocator global preload. Linux version.
 ##
-## Version 1.2
+## Version 1.3
 ## Written by Y.Voinov (C) 2025
 #####################################################################################
 
@@ -31,6 +31,7 @@ usage_note()
   echo "Options:"
   echo "  -n, -N, non-interactive mode for automation"
   echo "  -l, -L  make hard link in system libs"
+  echo "  -32     32 bit allocator preload on 32 bit OS"
   echo
   echo "Note: A hard link to the allocator in the system directory"
   echo "      is required for services restricted by the sandbox."
@@ -125,6 +126,9 @@ if [ "x$*" != "x" ]; then
       ;;
       -l|-L)
         make_hard_link="1"
+      ;;
+      -32)
+        BITNESS=32
       ;;
       *) shift
       ;;
