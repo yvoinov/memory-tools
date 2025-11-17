@@ -63,7 +63,6 @@ check_service()
 
 disable_preload()
 {
-
   if [ -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
     echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d found."
     if [ -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
