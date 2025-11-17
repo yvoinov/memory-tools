@@ -29,6 +29,10 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 
 `disable_global_preload_linux.sh` disables non-system allocator global preload (Linux).
 
+`enable_preload_per_service_solaris.sh` enables non-system allocator preload per specified systemd service (Solaris).
+
+`disable_preload_for_service_solaris.sh` allows you to selectively disable global preload of any non-system allocator for a given systemd service or remove per-service allocator preload (-d option) (Solaris).
+
 `enable_global_preload_solaris.sh` enables non-system allocator global preload (Solaris/OpenIndiana/OmniOS).
 
 `disable_global_preload_solaris.sh` disables non-system allocator global preload (Solaris/OpenIndiana/OmniOS).
