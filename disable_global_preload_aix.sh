@@ -3,8 +3,8 @@
 #####################################################################################
 ## The script for disable non-system allocator global preload. AIX version.
 ##
-## Version 1.1
-## Written by Y.Voinov (C) 2025
+## Version 1.2
+## Written by Y.Voinov (C) 2025-2026
 #####################################################################################
 
 # Variables
@@ -28,6 +28,8 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "    -h, -H, ?   show this help"
+  echo "Note: The script DOES NOT REMOVE additional global environment variables if they were defined."
+  echo "      You must remove them manually if necessary."
   exit 0
 }
 
