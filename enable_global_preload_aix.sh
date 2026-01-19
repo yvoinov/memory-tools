@@ -3,8 +3,8 @@
 #####################################################################################
 ## The script for enable non-system allocator global preload. AIX version.
 ##
-## Version 1.1
-## Written by Y.Voinov (C) 2025
+## Version 1.2
+## Written by Y.Voinov (C) 2025-2026
 #####################################################################################
 
 # Variables
@@ -29,6 +29,10 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "  -n, -N, non-interactive mode for automation"
+  echo '  -e, -E, -e|-E "VAR1=value VAR2=value ...", extra environment variables'
+  echo ""
+  echo "Note: Additional global environment variables are typically used to parameterize the allocator."
+  echo "      It can also be used to set other global environment variables that affect services/programs."
   exit 0
 }
 
@@ -77,6 +81,11 @@ check_enabled() {
 
 write_config()
 {
+  if [ -n "$EXTRA_ENV" ]; then
+    for pair in $EXTRA_ENV; do
+      echo "$pair" >> $PRELOAD_CONF
+    done
+  fi
   echo "LDR_PRELOAD=$ALLOCATOR_SYMLINK_PATH_32" >> $PRELOAD_CONF
   echo "LDR_PRELOAD64=$ALLOCATOR_SYMLINK_PATH_64" >> $PRELOAD_CONF
 }
@@ -103,25 +112,33 @@ enable_global_preload()
 # Main
 # Defaults
 non_interactive="0"
+EXTRA_ENV=""
 
- # Parse command line
-if [ "x$*" != "x" ]; then
-  arg_list=$*
-  # Read arguments
-  for i in $arg_list
-  do
-    case $i in
-      -h|-H|\?)
-        usage_note
+# Parse command line
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|-H|\?)
+      usage_note
       ;;
-      -n|-N)
-        non_interactive="1"
+    -n|-N)
+      non_interactive="1"
+      shift
       ;;
-      *) shift
+    -e|-E)
+      shift
+      [ $# -eq 0 ] && usage_note
+      if [ -z "$EXTRA_ENV" ]; then
+        EXTRA_ENV="$1"
+      else
+        EXTRA_ENV="$EXTRA_ENV $1"
+      fi
+      shift
       ;;
-    esac
-  done
-fi
+    *)
+      shift
+      ;;
+  esac
+done
 
 check_os
 check_root
