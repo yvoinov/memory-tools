@@ -10,8 +10,8 @@
 ##    If the service is complex - a one-time executed script or a set of commands in
 ##    a script, then preload must be performed manually.
 ##
-## Version 1.0
-## Written by Y.Voinov (C) 2025
+## Version 1.1
+## Written by Y.Voinov (C) 2025-2026
 #####################################################################################
 
 # Variables
@@ -33,6 +33,11 @@ usage_note()
   echo "Usage: `basename $0` <service-fmri> [options]"
   echo "Options:"
   echo "    -h, -H, ?   show this help"
+  echo '    -e, -E, -e|-E "VAR1=value VAR2=value ...", extra environment variables'
+  echo ""
+  echo "Note: Additional environment variables are typically used to parameterize the allocator."
+  echo "      It can also be used to set other environment variables that affect service."
+  echo ""
   echo "Example: `basename $0` cron:default"
   exit 0
 }
@@ -101,8 +106,8 @@ check_preloaded_already()
   var=$1
   value=$2
   fmri="`printf '%s\n' "$SERVICE_FMRI" | sed -e 's/^svc://' -e 's/:default$//'`"
-  cond="`svccfg -s $fmri listprop start/environment | grep '$var=$value'`"
-  if [ ! -n "$cond" ]; then
+  cond="`svccfg -s $fmri listprop start/environment | grep 'LD_PRELOAD_$var=$value'`"
+  if [ ! -z "$cond" ]; then
     echo "ERROR: $SERVICE_FMRI already preloaded."
     exit 8
   fi
@@ -114,13 +119,20 @@ check_service_bitness_and_set_preload()
   full_smf_name="`svcs -H $SERVICE_FMRI | awk '{ print $3 }'`"
   service_pid="`svcs -H -p $SERVICE_FMRI | grep -v $full_smf_name | awk '{ print $2 }' | sort -n | head -1`"
   full_name="`pargs $service_pid | grep -v $service_pid | awk '{ print $2 }'`"
+  if [ -n "$EXTRA_ENV" ]; then
+    for pair in $EXTRA_ENV; do
+      var=`echo "$pair" | cut -d= -f1`
+      val=`echo "$pair" | cut -d= -f2-`
+      svccfg -s "$SERVICE_FMRI" setenv "$var" "$val"
+    done
+  fi
   if [ ! -z "`file $full_name | grep 32`" ]; then
     echo "Service is 32 bit."
-    check_preloaded_already LD_PRELOAD_32 $ALLOCATOR_SYMLINK_PATH_32
+    check_preloaded_already 32 $ALLOCATOR_SYMLINK_PATH_32
     svccfg -s $SERVICE_FMRI setenv LD_PRELOAD_32 $ALLOCATOR_SYMLINK_PATH_32
   elif [ ! -z "`file $full_name | grep 64`" ]; then
     echo "Service is 64 bit."
-    check_preloaded_already LD_PRELOAD_64 $ALLOCATOR_SYMLINK_PATH_64
+    check_preloaded_already 64 $ALLOCATOR_SYMLINK_PATH_64
     svccfg -s $SERVICE_FMRI setenv LD_PRELOAD_64 $ALLOCATOR_SYMLINK_PATH_64
   fi
   svcadm refresh $SERVICE_FMRI
@@ -128,21 +140,41 @@ check_service_bitness_and_set_preload()
 }
 
 # Main
+SERVICE_FMRI=""
+EXTRA_ENV=""
+
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|-H|\?)
       usage_note
-    ;;
+      ;;
+    -e|-E)
+      shift
+      if [ $# -eq 0 ]; then
+        echo "Error: $1 requires an argument"
+        usage_note
+      fi
+      if [ -z "$EXTRA_ENV" ]; then
+        EXTRA_ENV="$1"
+      else
+        EXTRA_ENV="$EXTRA_ENV $1"
+      fi
+      shift
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      usage_note
+      ;;
     *)
-    # Accumulate to one string
+      # Accumulate SERVICE_FMRI
       if [ -z "$SERVICE_FMRI" ]; then
-        SERVICE_FMRI=$1
+        SERVICE_FMRI="$1"
       else
         SERVICE_FMRI="$SERVICE_FMRI $1"
       fi
-    ;;
-    esac
-    shift
+      shift
+      ;;
+  esac
 done
 
 if [ -z $SERVICE_FMRI ]; then
