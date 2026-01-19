@@ -6,8 +6,8 @@
 ## Service name (FMRI) specified as script argument.
 ## Solaris version.
 ##
-## Version 1.0
-## Written by Y.Voinov (C) 2025
+## Version 1.1
+## Written by Y.Voinov (C) 2025-2026
 #####################################################################################
 
 # Variables
@@ -33,6 +33,8 @@ usage_note()
   echo "    -h, -H, ?   show this help"
   echo "Example 1 (per-service workaround): `basename $0` cswapache2:default"
   echo "Example 2 (completely disable): `basename $0` cswapache2:default -d"
+  echo "Note: The script DOES NOT REMOVE additional environment variables if they were defined."
+  echo "      You must remove them manually if necessary."
   exit 0
 }
 
