@@ -3,8 +3,8 @@
 #####################################################################################
 ## The script for disable non-system allocator global preload. Solaris version.
 ##
-## Version 1.1
-## Written by Y.Voinov (C) 2025
+## Version 1.2
+## Written by Y.Voinov (C) 2025-2026
 #####################################################################################
 
 # Variables
@@ -102,7 +102,8 @@ disable_global_preload()
     secure_lib_search_path_32="`crle 2>/dev/null | grep 'Trusted Directories' | sed 's/^[^:]*:[ 	]*//; s/[ 	]*(.*)//; s/[ 	]*$//'`"
     # Disable global preload
     crle -c $PRELOAD_CONF_32 -l $default_search_path_32 -s $secure_lib_search_path_32
-  elif [ "`check_ld_config_64`" = "1" ]; then
+  fi
+  if [ "`check_ld_config_64`" = "1" ]; then
     default_search_path_64="`crle -64 2>/dev/null | grep 'Default Library Path' | sed 's/^[^:]*:[ 	]*//; s/[ 	]*(.*)//; s/[ 	]*$//'`"
     secure_lib_search_path_64="`crle -64 2>/dev/null | grep 'Trusted Directories' | sed 's/^[^:]*:[ 	]*//; s/[ 	]*(.*)//; s/[ 	]*$//'`"
     crle -64 -c $PRELOAD_CONF_64 -l $default_search_path_64 -s $secure_lib_search_path_64
