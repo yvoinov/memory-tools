@@ -3,8 +3,8 @@
 #####################################################################################
 ## The script for enable non-system allocator global preload. Solaris version.
 ##
-## Version 1.2
-## Written by Y.Voinov (C) 2025
+## Version 1.3
+## Written by Y.Voinov (C) 2025-2026
 #####################################################################################
 
 # Variables
@@ -59,6 +59,11 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "  -n, -N, non-interactive mode for automation"
+  echo '  -e, -E, -e|-E "-e|-E VAR1=value -e|-E VAR2=value ...", extra global environment variables'
+  echo ""
+  echo "Note: Additional global environment variables are typically used to parameterize the allocator."
+  echo "      It can also be used to set other global environment variables that affect all processes"
+  echo "      and programs without exception."
   exit 0
 }
 
@@ -240,32 +245,40 @@ enable_global_preload()
     echo "Config file $PRELOAD_CONF_64 exists and saved to $PRELOAD_CONF_64.orig."
   fi
   # Enable global preload
-  crle -c $PRELOAD_CONF_32 -l $RUNTIME_DIR_32 -s $SECURE_DIR_32 -e LD_PRELOAD_32=$ALLOCATOR_SYMLINK_PATH_32
-  crle -64 -c $PRELOAD_CONF_64 -l $RUNTIME_DIR_64 -s $SECURE_DIR_64 -e LD_PRELOAD_64=$ALLOCATOR_SYMLINK_PATH_64
+  eval crle -c $PRELOAD_CONF_32 -l $RUNTIME_DIR_32 -s $SECURE_DIR_32 $EXTRA_ENV -e LD_PRELOAD_32=$ALLOCATOR_SYMLINK_PATH_32
+  eval crle -64 -c $PRELOAD_CONF_64 -l $RUNTIME_DIR_64 -s $SECURE_DIR_64 $EXTRA_ENV -e LD_PRELOAD_64=$ALLOCATOR_SYMLINK_PATH_64
 }
 
 # Main
 # Defaults
 non_interactive="0"
+EXTRA_ENV=""
 
- # Parse command line
-if [ "x$*" != "x" ]; then
-  arg_list=$*
-  # Read arguments
-  for i in $arg_list
-  do
-    case $i in
-      -h|-H|\?)
-        usage_note
+# Parse command line options
+while getopts "hH?nNe:E:" opt; do
+  case "$opt" in
+    h|H|\?)
+      usage_note
       ;;
-      -n|-N)
-        non_interactive="1"
+    n|N)
+      non_interactive="1"
       ;;
-      *) shift
+    e|E)
+      # Simply append the argument as-is
+      if [ -z "$EXTRA_ENV" ]; then
+        EXTRA_ENV="$OPTARG"
+      else
+        EXTRA_ENV="$EXTRA_ENV $OPTARG"
+      fi
       ;;
-    esac
-  done
-fi
+    *)
+      usage_note
+      ;;
+  esac
+done
+
+# POSIX-safe shift
+shift `expr $OPTIND - 1`
 
 check_os 1  # Output OS to screen
 check_root
