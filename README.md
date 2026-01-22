@@ -21,6 +21,8 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 
 `disable_pymalloc.sh` sets PYTHONMALLOC to use libC (Linux).
 
+`disable_pymalloc_for_service_linux.sh` sets PYTHONMALLOC to use libC for python-based service (Linux).
+
 `enable_preload_per_service_linux.sh` enables non-system allocator preload per specified systemd service (Linux).
 
 `disable_preload_for_service_linux.sh` allows you to selectively disable global preload of any non-system allocator for a given systemd service or remove per-service allocator preload (-d option) (Linux).
