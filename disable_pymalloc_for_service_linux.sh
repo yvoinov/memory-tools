@@ -16,6 +16,9 @@ PYTHON_BINARY="python3"
 # Drop-in file name
 CONF_FILE_NAME="mt_disable_pymalloc_env.conf"
 
+# Drop-in directory
+DROP_IN_DIR="/usr/lib/systemd/system"
+
 # Subroutines
 usage_note()
 {
@@ -56,25 +59,25 @@ check_service()
 
 disable_preload()
 {
-  if [ -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
-    echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d found."
-    if [ -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
-      rm -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-      rmdir /usr/lib/systemd/system/$SERVICE_NAME.service.d
-      if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
-        echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d removed."
+  if [ -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
+    echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d found."
+    if [ -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+      rm -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+      rmdir $DROP_IN_DIR/$SERVICE_NAME.service.d
+      if [ ! -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
+        echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d removed."
       fi
     fi
   else
-    echo "ERROR: Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d does not exists."
+    echo "ERROR: Directory $DROP_IN_DIR/$SERVICE_NAME.service.d does not exists."
     exit 4
   fi
 }
 
 write_file_content()
 {
-  echo "[Service]" > /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  echo "Environment='PYTHONMALLOC=malloc'" >> /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  echo "[Service]" > $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  echo "Environment='PYTHONMALLOC=malloc'" >> $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
 }
 
 check_version()
@@ -139,36 +142,36 @@ check_version
 check_service
 
 if [ "$disable_drop_in" = "0" ]; then
-  if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
-    mkdir -p /usr/lib/systemd/system/$SERVICE_NAME.service.d/
-    echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d created."
+  if [ ! -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
+    mkdir -p $DROP_IN_DIR/$SERVICE_NAME.service.d/
+    echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d created."
   else
-    echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d exists."
+    echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d exists."
   fi
 
-  if [ ! -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+  if [ ! -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
     write_file_content
-    echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
+    echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
   else
-    echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
-    if [ "`grep PYTHONMALLOC /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME`" ]; then
+    echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
+    if [ "`grep PYTHONMALLOC $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME`" ]; then
       # Overwrite file content if drop-in exist
       write_file_content
-      echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME overwrited."
+      echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME overwrited."
     fi
     echo "New file content:"
-    cat /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+    cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
     exit 4
   fi
 else
-  if [ -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
-    echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d exists."
-    if [ -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
-      echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
-      rm -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-      echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME deleted."
+  if [ -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
+    echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d exists."
+    if [ -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+      echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
+      rm -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+      echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME deleted."
     fi
-    rmdir /usr/lib/systemd/system/$SERVICE_NAME.service.d
+    rmdir $DROP_IN_DIR/$SERVICE_NAME.service.d
   fi
 fi
 
