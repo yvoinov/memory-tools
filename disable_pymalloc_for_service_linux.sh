@@ -1,11 +1,12 @@
 #!/bin/sh
 
 #####################################################################################
-## The script for disable own Python malloc on Linux per specified systemd service
+## The script for enable/disable own Python malloc on Linux per specified systemd
+## service.
 ## Service name specified as script argument (without any suffix, only service name).
 ## Linux version.
 ##
-## Version 1.0
+## Version 1.1
 ## Written by Y.Voinov (C) 2026
 #####################################################################################
 
@@ -18,12 +19,14 @@ CONF_FILE_NAME="mt_disable_pymalloc_env.conf"
 # Subroutines
 usage_note()
 {
-  echo "The script sets PYTHONMALLOC to use libC on Linux for specified service."
+  echo "The script enable/disable PYTHONMALLOC to use libC on Linux for specified service."
   echo "Must be run as root."
   echo "Usage: `basename $0` <service_name> [options]"
   echo "Options:"
   echo "    -h, -H, ?   show this help"
-  echo "Example: `basename $0` tuned"
+  echo "    -d, -D      disable libC PYTHONMALLOC and delete drop-in"
+  echo "Example 1 (enable using libC malloc): `basename $0` tuned"
+  echo "Example 2 (disable using libC malloc): `basename $0` tuned -d"
   exit 0
 }
 
@@ -99,12 +102,17 @@ if [ -z $1 ]; then
   usage_note
 fi
 
+# Defaults
+disable_drop_in="0"
 SERVICE_NAME=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|-H|\?)
       usage_note
+    ;;
+    -d|-D)
+      disable_drop_in="1"
     ;;
     *)
     # Accumulate to one string
@@ -118,6 +126,9 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+echo "disable_drop_in=$disable_drop_in"
+echo "SERVICE_NAME=$SERVICE_NAME"
+
 if [ -z $SERVICE_NAME ]; then
   usage_note
 fi
@@ -127,26 +138,38 @@ check_root
 check_version
 check_service
 
-if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
-  mkdir -p /usr/lib/systemd/system/$SERVICE_NAME.service.d/
-  echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d created."
-else
-  echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d exists."
-fi
-
-if [ ! -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
-  write_file_content
-  echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
-else
-  echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
-  if [ "`grep PYTHONMALLOC /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME`" ]; then
-    # Overwrite file content if drop-in exist
-    write_file_content
-    echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME overwrited."
+if [ "$disable_drop_in" = "0" ]; then
+  if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
+    mkdir -p /usr/lib/systemd/system/$SERVICE_NAME.service.d/
+    echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d created."
+  else
+    echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d exists."
   fi
-  echo "New file content:"
-  cat /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  exit 4
+
+  if [ ! -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+    write_file_content
+    echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
+  else
+    echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
+    if [ "`grep PYTHONMALLOC /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME`" ]; then
+      # Overwrite file content if drop-in exist
+      write_file_content
+      echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME overwrited."
+    fi
+    echo "New file content:"
+    cat /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+    exit 4
+  fi
+else
+  if [ -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
+    echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d exists."
+    if [ -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+      echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
+      rm -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+      echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME deleted."
+    fi
+    rmdir /usr/lib/systemd/system/$SERVICE_NAME.service.d
+  fi
 fi
 
 systemctl daemon-reload
