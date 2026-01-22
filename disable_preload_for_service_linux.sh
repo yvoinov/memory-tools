@@ -6,8 +6,8 @@
 ## Service name specified as script argument (without any suffix, only service name).
 ## Linux version.
 ##
-## Version 1.3
-## Written by Y.Voinov (C) 2024-2025
+## Version 1.4
+## Written by Y.Voinov (C) 2024-2026
 #####################################################################################
 
 # Variables
@@ -17,6 +17,9 @@ BITNESS=64
 LIBRARY_PREFIX="/usr"
 # Set library name to preload
 LIBRARY_NAME="libc.so"
+
+# Drop-in directory
+DROP_IN_DIR="/usr/lib/systemd/system"
 
 # Find libc binary
 LIBC_ABSOLUTE_PATH="`find $LIBRARY_PREFIX -name $LIBRARY_NAME.? -exec file {} \; | grep $BITNESS-bit | cut -d':' -f1`"
@@ -63,25 +66,25 @@ check_service()
 
 disable_preload()
 {
-  if [ -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
-    echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d found."
-    if [ -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
-      rm -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-      rmdir /usr/lib/systemd/system/$SERVICE_NAME.service.d
-      if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
-        echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d removed."
+  if [ -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
+    echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d found."
+    if [ -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+      rm -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+      rmdir $DROP_IN_DIR/$SERVICE_NAME.service.d
+      if [ ! -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
+        echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d removed."
       fi
     fi
   else
-    echo "ERROR: Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d does not exists."
+    echo "ERROR: Directory $DROP_IN_DIR/$SERVICE_NAME.service.d does not exists."
     exit 4
   fi
 }
 
 write_file_content()
 {
-  echo "[Service]" > /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  echo "Environment='LD_PRELOAD=$LIBC_ABSOLUTE_PATH'" >> /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  echo "[Service]" > $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  echo "Environment='LD_PRELOAD=$LIBC_ABSOLUTE_PATH'" >> $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
 }
 
 # Main
@@ -125,25 +128,25 @@ if [ "$disable_full" = "1" ]; then
   exit 0
 fi
 
-if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
-  mkdir -p /usr/lib/systemd/system/$SERVICE_NAME.service.d/
-  echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d created."
+if [ ! -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
+  mkdir -p $DROP_IN_DIR/$SERVICE_NAME.service.d/
+  echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d created."
 else
-  echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d exists."
+  echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d exists."
 fi
 
-if [ ! -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+if [ ! -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
   write_file_content
-  echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
+  echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
 else
-  echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
-  if [ "`grep alloc.so /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME`" ]; then
+  echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
+  if [ "`grep alloc.so $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME`" ]; then
     # Overwrite file content if preload exist
     write_file_content
-    echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME overwrited."
+    echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME overwrited."
   fi
   echo "New file content:"
-  cat /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
   exit 4
 fi
 
