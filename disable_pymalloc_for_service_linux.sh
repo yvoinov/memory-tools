@@ -12,7 +12,7 @@
 # Variables
 PYTHON_BINARY="python3"
 
-# Find libc binary
+# Drop-in file name
 CONF_FILE_NAME="mt_disable_pymalloc_env.conf"
 
 # Subroutines
