@@ -5,9 +5,12 @@
 ## It sets PYTHONMALLOC to use libC. This require when using custom allocators to
 ## prevent segfaults.
 ##
-## Version 1.3
-## Written by Y.Voinov (C) 2022-2025
+## Version 1.4
+## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
+
+# Variables
+PYTHON_BINARY="python3"
 
 # Global environment file
 GLOBAL_ENV="/etc/environment"
@@ -16,7 +19,7 @@ GLOBAL_ENV="/etc/environment"
 usage_note()
 {
   echo "The script sets PYTHONMALLOC to use libC on Linux."
-  echo "Just run it and reboot system. Must be run as root."
+  echo "Just run it and re-login system. Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "    -h, -H, ?   show this help"
@@ -41,7 +44,7 @@ check_root()
 
 check_version()
 {
-  py_exec="`whereis python | awk '{ print $2 }'`"
+  py_exec="`whereis $PYTHON_BINARY | awk '{ print $2 }'`"
 
   if [ -z "$py_exec" ]; then
     echo "ERROR: Python not found. Exiting..."
@@ -69,11 +72,11 @@ if [ -f "$GLOBAL_ENV" ]; then
     echo "ERROR: $value already set."
     exit 1
   fi
-  echo "PYTHONMALLOC='malloc'" >> $GLOBAL_ENV
+  echo "PYTHONMALLOC=malloc" >> $GLOBAL_ENV
 else
   echo "ERROR: File $GLOBAL_ENV not found. Exiting..."
   exit 1
 fi
 
-echo "Done. Please reboot this system now."
+echo "Done. Please re-login now."
 exit 0
