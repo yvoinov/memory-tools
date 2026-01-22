@@ -19,7 +19,7 @@ ENV_VALUE="PYTHONMALLOC=malloc"
 # Subroutines
 usage_note()
 {
-  echo "The script sets PYTHONMALLOC to use libC on Linux."
+  echo "The script enable/disable PYTHONMALLOC to use libC on Linux for userland."
   echo "Just run it and re-login system. Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
