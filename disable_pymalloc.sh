@@ -1,11 +1,9 @@
 #!/bin/sh
 
 #####################################################################################
-## The script intended to disable own Python malloc on Linux.
-## It sets PYTHONMALLOC to use libC. This require when using custom allocators to
-## prevent segfaults.
+## The script intended to enable/disable own Python malloc on Linux for userland.
 ##
-## Version 1.4
+## Version 1.5
 ## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
@@ -15,6 +13,9 @@ PYTHON_BINARY="python3"
 # Global environment file
 GLOBAL_ENV="/etc/environment"
 
+# Environment
+ENV_VALUE="PYTHONMALLOC=malloc"
+
 # Subroutines
 usage_note()
 {
@@ -23,6 +24,7 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "    -h, -H, ?   show this help"
+  echo "    -d, -D      disable libC PYTHONMALLOC in $GLOBAL_ENV"
   exit 0
 }
 
@@ -62,20 +64,47 @@ check_version()
   fi
 }
 
+# Defaults
+disable_libc="0"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|-H|\?)
+      usage_note
+    ;;
+    -d|-D)
+      disable_libc="1"
+    ;;
+    *)
+      shift
+    ;;
+    esac
+    shift
+done
+
 check_os
 check_root
 check_version
 
-if [ -f "$GLOBAL_ENV" ]; then
-  value="`cat $GLOBAL_ENV | grep PYTHONMALLOC`"
-  if [ ! -z "$value" ]; then
-    echo "ERROR: $value already set."
+if [ "$disable_libc" = "0" ]; then
+  if [ -f "$GLOBAL_ENV" ]; then
+    value="`cat $GLOBAL_ENV | grep PYTHONMALLOC`"
+    if [ ! -z "$value" ]; then
+      echo "ERROR: $value already set."
+      exit 1
+    fi
+    echo $ENV_VALUE >> $GLOBAL_ENV
+  else
+    echo "ERROR: File $GLOBAL_ENV not found. Exiting..."
     exit 1
   fi
-  echo "PYTHONMALLOC=malloc" >> $GLOBAL_ENV
 else
-  echo "ERROR: File $GLOBAL_ENV not found. Exiting..."
-  exit 1
+  value="`cat $GLOBAL_ENV | grep $ENV_VALUE`"
+  if [ ! -z "$value" ]; then
+    tmp_file=`mktemp`
+    sed -i '/$ENV_VALUE/d' $GLOBAL_ENV > $tmp_file && mv $tmp_file $GLOBAL_ENV
+    echo "INFO: $ENV_VALUE deleted."
+  fi
 fi
 
 echo "Done. Please re-login now."
