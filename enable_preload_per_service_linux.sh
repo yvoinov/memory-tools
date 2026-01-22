@@ -5,8 +5,8 @@
 ## Service name specified as script argument (without any suffix, only service name).
 ## Linux version.
 ##
-## Version 1.4
-## Written by Y.Voinov (C) 2024-2025
+## Version 1.5
+## Written by Y.Voinov (C) 2024-2026
 #####################################################################################
 
 # Variables
@@ -16,6 +16,9 @@ BITNESS=64
 LIBRARY_PREFIX="/usr/local"
 # Set library name to preload
 LIBRARY_NAME="*alloc.so"
+
+# Drop-in directory
+DROP_IN_DIR="/usr/lib/systemd/system"
 
 # Find allocator binary
 # We assume that there is only one allocator in a given path and it has a corresponding name pattern.
@@ -95,21 +98,21 @@ check_root
 check_service
 check_symlink
 
-if [ ! -d /usr/lib/systemd/system/$SERVICE_NAME.service.d ]; then
-  mkdir -p /usr/lib/systemd/system/$SERVICE_NAME.service.d/
-  echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d created."
+if [ ! -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
+  mkdir -p $DROP_IN_DIR/$SERVICE_NAME.service.d/
+  echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d created."
 else
-  echo "Directory /usr/lib/systemd/system/$SERVICE_NAME.service.d exists."
+  echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d exists."
 fi
 
-if [ ! -f /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
-  echo "[Service]" > /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  echo "Environment='LD_PRELOAD=$ALLOCATOR_SYMLINK_PATH'" >> /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
+if [ ! -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+  echo "[Service]" > $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  echo "Environment='LD_PRELOAD=$ALLOCATOR_SYMLINK_PATH'" >> $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
 else
-  echo "File /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
+  echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
   echo "File content: "
-  cat /usr/lib/systemd/system/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
   exit 4
 fi
 
