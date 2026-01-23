@@ -23,7 +23,10 @@ DROP_IN_DIR="/usr/lib/systemd/system"
 # Find allocator binary
 # We assume that there is only one allocator in a given path and it has a corresponding name pattern.
 ALLOCATOR_SYMLINK_PATH="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep $BITNESS | cut -d':' -f1`"
-CONF_FILE_NAME="override_env.conf"
+CONF_FILE_NAME="mt_preload_env.conf"
+
+# Drop-in extra env
+CONF_EXTRA_ENV_FILE="mt_extra_env.conf"
 
 # Subroutines
 usage_note()
@@ -33,7 +36,8 @@ usage_note()
   echo "Usage: `basename $0` <service-name> [options]"
   echo "Options:"
   echo "    -h, -H, ?   show this help"
-  echo "Example: `basename $0` clamav-daemon"
+  echo '    -e, -E, -e|-E "VAR1=value VAR2=value ...", extra environment variables'
+  echo "Example: `basename $0` apache2"
   exit 0
 }
 
@@ -72,11 +76,24 @@ check_symlink()
 }
 
 # Main
+# Defaults
+EXTRA_ENV=""
+
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|-H|\?)
       usage_note
     ;;
+    -e|-E)
+      shift
+      [ $# -eq 0 ] && usage_note
+      if [ -z "$EXTRA_ENV" ]; then
+        EXTRA_ENV="$1"
+      else
+        EXTRA_ENV="$EXTRA_ENV $1"
+      fi
+      shift
+      ;;
     *)
     # Accumulate to one string
       if [ -z "$SERVICE_NAME" ]; then
@@ -113,7 +130,23 @@ else
   echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
   echo "File content: "
   cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  exit 4
+fi
+
+if [ -n "$EXTRA_ENV" ]; then
+  if [ -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE ]; then
+    echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE exists."
+    echo "File content: "
+    cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE
+    echo "The file will be overwritten."
+  fi
+
+  echo "[Service]" > $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE
+  for pair in $EXTRA_ENV; do
+    echo "Environment='$pair'" >> $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE
+  done
+
+  echo "New file content: "
+  cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE
 fi
 
 systemctl daemon-reload
