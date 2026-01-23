@@ -6,7 +6,7 @@
 ## Service name specified as script argument (without any suffix, only service name).
 ## Linux version.
 ##
-## Version 1.4
+## Version 1.5
 ## Written by Y.Voinov (C) 2024-2026
 #####################################################################################
 
@@ -23,7 +23,10 @@ DROP_IN_DIR="/usr/lib/systemd/system"
 
 # Find libc binary
 LIBC_ABSOLUTE_PATH="`find $LIBRARY_PREFIX -name $LIBRARY_NAME.? -exec file {} \; | grep $BITNESS-bit | cut -d':' -f1`"
-CONF_FILE_NAME="override_env.conf"
+CONF_FILE_NAME="mt_preload_env.conf"
+
+# Drop-in extra env
+CONF_EXTRA_ENV_FILE="mt_extra_env.conf"
 
 # Subroutines
 usage_note()
@@ -33,8 +36,9 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` <service_name> [options]"
   echo "Options:"
-  echo "    -d, -D      disable preload and remove drop-in completely"
   echo "    -h, -H, ?   show this help"
+  echo "    -d, -D      disable preload and remove drop-in completely"
+  echo "    -e, -E      disable extra-env and remove it drop-in completely if any"
   echo "Example 1 (per-service workaround): `basename $0` apache2"
   echo "Example 2 (completely disable): `basename $0` apache2 -d"
   exit 0
@@ -64,12 +68,14 @@ check_service()
   fi
 }
 
-disable_preload()
+disable_drop_in()
 {
+  drop_in_file_name=$1
   if [ -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
     echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d found."
-    if [ -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
-      rm -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+    if [ -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$drop_in_file_name ]; then
+      rm -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$drop_in_file_name
+      echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$drop_in_file_name removed."
       rmdir $DROP_IN_DIR/$SERVICE_NAME.service.d
       if [ ! -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
         echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d removed."
@@ -93,12 +99,16 @@ if [ -z $1 ]; then
 fi
 
 disable_full="0"
+disable_extra_env="0"
 SERVICE_NAME=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -d|-D)
       disable_full="1"
+    ;;
+    -e|-E)
+      disable_extra_env="1"
     ;;
     -h|-H|\?)
       usage_note
@@ -123,8 +133,12 @@ check_os
 check_root
 check_service
 
+if [ "$disable_extra_env" = "1" ]; then
+  disable_drop_in $CONF_EXTRA_ENV_FILE
+fi
+
 if [ "$disable_full" = "1" ]; then
-  disable_preload
+  disable_drop_in $CONF_FILE_NAME
   exit 0
 fi
 
@@ -147,7 +161,6 @@ else
   fi
   echo "New file content:"
   cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  exit 4
 fi
 
 systemctl daemon-reload
