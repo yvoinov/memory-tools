@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #####################################################################################
-## The script for enable extra env drop-ins for all enabled systemd services.
+## The script for enable extra env drop-ins for all running systemd services.
 ## This script was written to workaround the lack of a global environment for systemd
 ## services.
 ## Linux version.
@@ -21,7 +21,7 @@ CONF_EXTRA_ENV_FILE="mt_extra_env.conf"
 # Subroutines
 usage_note()
 {
-  echo "The script for enable extra env drop-ins for all enabled systemd services."
+  echo "The script for enable extra env drop-ins for all running systemd services."
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
