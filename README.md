@@ -46,3 +46,7 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 `enable_global_extra_env_linux.sh` enables extra env drop-ins for all running systemd services due to lack systemd global environment functionality (Linux).
 
 `disable_global_extra_env_linux.sh` disables extra env drop-ins for all running systemd services due to lack systemd global environment functionality (Linux).
+
+`enable_extra_env_per_service_linux.sh` enables extra env per specified systemd service.
+
+`disable_extra_env_per_service_linux.sh` disables extra env for specified systemd service.
