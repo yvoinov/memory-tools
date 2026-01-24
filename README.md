@@ -43,6 +43,6 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 
 `disable_global_preload_aix.sh` disables non-system allocator global preload (AIX).
 
-`enable_global_extra_env_linux.sh` enables extra env drop-ins for all enabled systemd services due to lack systemd global environment functionality (Linux).
+`enable_global_extra_env_linux.sh` enables extra env drop-ins for all running systemd services due to lack systemd global environment functionality (Linux).
 
-`disable_global_extra_env_linux.sh` disables extra env drop-ins for all enabled systemd services due to lack systemd global environment functionality (Linux).
+`disable_global_extra_env_linux.sh` disables extra env drop-ins for all running systemd services due to lack systemd global environment functionality (Linux).
