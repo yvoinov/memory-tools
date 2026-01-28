@@ -1,17 +1,18 @@
 #!/bin/sh
 
 #####################################################################################
-## The script executes ld prerequisites for LMA (Solaris/Linux/FreeBSD).
+## The script executes ld prerequisites for custom allocator (Solaris/Linux/FreeBSD).
 ## 
-## Version 1.2
-## Written by Y.Voinov (C) 2022-2025
+## Version 1.3
+## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
-# LMA paths. Change if installed different base.
+# Allocator paths. Change if installed different base.
 LD_BASE="/usr/local"
-LD_PATH1="$LD_BASE/lib/ltalloc"
-LD_PATH2="$LD_BASE/lib/ltalloc/64"
-LIB_NAME="libltalloc.so"
+LIB_NAME_BASE="*alloc"
+LD_PATH1="$LD_BASE/lib/$LIB_NAME_BASE"
+LD_PATH2="$LD_BASE/lib/$LIB_NAME_BASE/64"
+LIB_NAME="$LIB_NAME_BASE.so"
 
 # Paths to write
 # Linux
@@ -29,7 +30,7 @@ CRLE_CONF2="/var/ld/64/ld.config"
 # Subroutines
 usage_note()
 {
-  echo "The script executes ld prerequisites for LMA (Solaris/Linux/FreeBSD)."
+  echo "The script executes ld prerequisites for custom allocator (Solaris/Linux/FreeBSD)."
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
@@ -72,9 +73,11 @@ write_linux()
 
 check_lib()
 {
-  if [ ! -f $LD_PATH1/$LIB_NAME -a ! -f $LD_PATH2/$LIB_NAME ]; then
-    echo "ERROR: The path(s) being added do not exist. Install LMA first."
-    exit 2
+   if [ -z "`ls $LD_PATH1/$LIB_NAME`" ] && [ -z "`ls $LD_PATH2/$LIB_NAME`" ]; then
+     echo $LD_PATH1/$LIB_NAME
+     echo $LD_PATH2/$LIB_NAME
+     echo "ERROR: The path(s) being added do not exist. Install allocator first."
+     exit 2
   fi
 }
 
