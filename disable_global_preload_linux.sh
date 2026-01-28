@@ -29,7 +29,7 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "    -h, -H, ?   show this help"
-  echo "    -u, -U, ?   unlink hard link if exists"
+  echo "    -u, -U      unlink hard link if exists"
   echo "    -32         disable 32 bit allocator preload on 32 bit OS"
   echo
   echo "Note: A hard link to the allocator in the system directory"
