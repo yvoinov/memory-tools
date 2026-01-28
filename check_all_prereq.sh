@@ -3,8 +3,8 @@
 #####################################################################################
 ## The script checks all prerequisites for custom allocator
 ##
-## Version 1.2
-## Written by Y.Voinov (C) 2023-2025
+## Version 1.3
+## Written by Y.Voinov (C) 2023-2026
 #####################################################################################
 
 # Allocator install paths. Change if installed different base.
@@ -28,6 +28,8 @@ SYSCTL_FILE_STR4="vm.swappiness"
 SWAPPINESS="50"
 
 verbose="0"
+
+ALL_OK="0"
 
 # Subroutines
 usage_note()
@@ -87,6 +89,7 @@ check_lib()
   fi
   if [ ! -f $LD_PATH1/"lib"$LIB_NAME_BASE".so" -a ! -f $LD_PATH2/"lib"$LIB_NAME_BASE".so" ]; then
     echo "NOT OK"
+    ALL_OK="1"
   else
     echo "OK"
   fi
@@ -113,6 +116,7 @@ check_swap()
     echo "OK"
   else
     echo "NOT OK"
+    ALL_OK="1"
   fi
 }
 
@@ -125,6 +129,7 @@ check_thp()
     echo "OK"
   else
     echo "NOT OK"
+    ALL_OK="1"
   fi
 }
 
@@ -137,6 +142,7 @@ check_recommended_vm_settings()
     echo "OK"
   else
     echo "NOT OK"
+    ALL_OK="1"
   fi
   printf "Checking overcommit ratio..."
   cmd2="`sysctl $SYSCTL_FILE_STR2 | cut -d' ' -f3`"
@@ -145,6 +151,7 @@ check_recommended_vm_settings()
     echo "OK"
   else
     echo "NOT OK"
+    ALL_OK="1"
   fi
   printf "Checking vfs_cache_pressure..."
   cmd3="`sysctl $SYSCTL_FILE_STR3 | cut -d' ' -f3`"
@@ -153,6 +160,7 @@ check_recommended_vm_settings()
     echo "OK"
   else
     echo "NOT OK"
+    ALL_OK="1"
   fi
   printf "Checking swappiness..."
   cmd4="`sysctl $SYSCTL_FILE_STR4 | cut -d' ' -f3`"
@@ -161,6 +169,7 @@ check_recommended_vm_settings()
     echo "OK"
   else
     echo "NOT OK"
+    ALL_OK="1"
   fi
 }
 
@@ -187,6 +196,7 @@ check_ld_conditions()
     echo "OK"
   else
     echo "NOT OK"
+    ALL_OK="1"
   fi
 }
 
@@ -223,5 +233,15 @@ if [ "$os" = "Linux" ]; then
   check_recommended_vm_settings
 fi
 
-echo "Done."
-exit 0
+printf "Done. "
+
+if [ "$ALL_OK" = "0" ]; then
+  echo "All prerequisites OK."
+  exit 0
+else
+  echo "Any/all prerequisites NOT OK."
+  if [ "$verbose" = "0" ]; then
+    echo "Run in verbose mode to see details."
+  fi
+  exit 1
+fi
