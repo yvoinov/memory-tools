@@ -30,11 +30,13 @@ usage_note()
   echo "Usage: `basename $0` <service_fmri> [options]"
   echo "Options:"
   echo "    -d, -D      disable per-service preload"
+  echo "    -n, -N      do not restart service"
   echo "    -h, -H, ?   show this help"
   echo "Example 1 (per-service workaround): `basename $0` cswapache2:default"
   echo "Example 2 (completely disable): `basename $0` cswapache2:default -d"
-  echo "Note: The script DOES NOT REMOVE additional environment variables if they were defined."
-  echo "      You must remove them manually if necessary."
+  echo "Note 1: The script DOES NOT REMOVE additional environment variables if they were defined."
+  echo "        You must remove them manually if necessary."
+  echo "Note 2: Option -n|-N is intended to prevent the service from restarting when updating its environment."
   exit 0
 }
 
@@ -168,7 +170,9 @@ EOT
 EOT
   fi
   svcadm refresh $full_smf_name
-  svcadm restart $full_smf_name
+  if [ "$disable_restart" != "1" ]; then
+    svcadm restart $full_smf_name
+  fi
 }
 
 # Main
@@ -177,12 +181,16 @@ if [ -z $1 ]; then
 fi
 
 disable_full="0"
+disable_restart="0"
 SERVICE_FMRI=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -d|-D)
       disable_full="1"
+    ;;
+    -n|-N)
+      disable_restart="1"
     ;;
     -h|-H|\?)
       usage_note
