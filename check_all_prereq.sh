@@ -3,15 +3,19 @@
 #####################################################################################
 ## The script checks all prerequisites for custom allocator
 ##
-## Version 1.3
+## Version 1.4
 ## Written by Y.Voinov (C) 2023-2026
 #####################################################################################
 
-# Allocator install paths. Change if installed different base.
-LIB_NAME_BASE="*alloc"
+# Allocator library search prefix: from where to find
 LD_BASE="/usr/local"
-LD_PATH1="$LD_BASE/lib/$LIB_NAME_BASE"
-LD_PATH2="$LD_BASE/lib/$LIB_NAME_BASE/64"
+# Set library name to find
+LIB_NAME="*alloc.so"
+
+# Find allocator binary
+# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
+ALLOCATOR_PATH="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 32 | cut -d':' -f1`"
+ALLOCATOR_PATH64="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 64 | cut -d':' -f1`"
 
 # sysctl values to check (Linux only)
 SYSCTL_FILE_STR1="vm.overcommit_memory"
@@ -81,13 +85,14 @@ check_lib()
   printf "Checking custom allocator installed..."
   if [ "$verbose" = "1" ]; then
     echo .
-    if [ -f $LD_PATH1/"lib"$LIB_NAME_BASE".so" ]; then
-      echo $LD_PATH1/"lib"$LIB_NAME_BASE".so"
-    elif [ -f $LD_PATH2/"lib"$LIB_NAME_BASE".so" ]; then
-      echo $LD_PATH2/"lib"$LIB_NAME_BASE".so"
+    if [ -f "$ALLOCATOR_PATH" ]; then
+      echo $ALLOCATOR_PATH
+    fi
+    if [ -f "$ALLOCATOR_PATH64" ]; then
+      echo $ALLOCATOR_PATH64
     fi
   fi
-  if [ ! -f $LD_PATH1/"lib"$LIB_NAME_BASE".so" -a ! -f $LD_PATH2/"lib"$LIB_NAME_BASE".so" ]; then
+  if [ ! -f "$ALLOCATOR_PATH" -a ! -f "$ALLOCATOR_PATH64" ]; then
     echo "NOT OK"
     ALL_OK="1"
   else
@@ -178,16 +183,15 @@ check_ld_conditions()
   printf "Checking LD.SO conditions..."
   res="0"
   if [ "$os" = "SunOS" ]; then
-    if [ ! -z "`crle | grep $LD_PATH1`" -a ! -z "`crle -64 | grep $LD_PATH2`" ]; then
+    if [ ! -z "`crle | grep $ALLOCATOR_PATH`" -a ! -z "`crle -64 | grep $ALLOCATOR_PATH64`" ]; then
       res=1
     fi
   elif [ "$os" = "Linux" ]; then
-#    if [ ! -z "`ldconfig -p | grep $LIB_NAME_BASE`" ]; then
-    if [ ! -z "`ldconfig -p | grep $LD_PATH1`" -o ! -z "`ldconfig -p | grep $LD_PATH2`" ]; then
+    if [ ! -z "`ldconfig -p | grep $ALLOCATOR_PATH`" -o ! -z "`ldconfig -p | grep $ALLOCATOR_PATH64`" ]; then
       res=1
     fi
   elif [ "$os" = "FreeBSD" ]; then
-    if [ ! -z "`ldconfig -r | grep $LD_PATH1`" -o ! -z "`ldconfig -r | grep $LD_PATH2`" ]; then
+    if [ ! -z "`ldconfig -r | grep $ALLOCATOR_PATH`" -o ! -z "`ldconfig -r | grep $ALLOCATOR_PATH64`" ]; then
       res=1
     fi
   fi
