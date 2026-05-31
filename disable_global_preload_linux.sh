@@ -91,7 +91,7 @@ disable_global_preload()
 # Defaults
 unlink_hard_link="0"
 
- # Parse command line
+# Parse command line
 if [ "x$*" != "x" ]; then
   arg_list=$*
   # Read arguments
