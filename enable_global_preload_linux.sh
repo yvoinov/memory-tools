@@ -111,7 +111,7 @@ enable_global_preload()
 non_interactive="0"
 make_hard_link="0"
 
- # Parse command line
+# Parse command line
 if [ "x$*" != "x" ]; then
   arg_list=$*
   # Read arguments
