@@ -16,7 +16,7 @@ LIBRARY_PREFIX="/usr/local"
 # Set library name to preload
 LIBRARY_NAME="*alloc.so"
 
-# Find allocator binary
+# Find allocator lib(s)
 # We assume that there is only one allocator in a given path and it has a corresponding name pattern.
 ALLOCATOR_SYMLINK_PATH_32="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep 32 | cut -d':' -f1`"
 ALLOCATOR_SYMLINK_PATH_64="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep 64 | cut -d':' -f1`"
