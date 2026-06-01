@@ -3,7 +3,7 @@
 #####################################################################################
 ## The script checks all prerequisites for custom allocator
 ##
-## Version 1.4
+## Version 1.5
 ## Written by Y.Voinov (C) 2023-2026
 #####################################################################################
 
@@ -187,11 +187,15 @@ check_ld_conditions()
       res=1
     fi
   elif [ "$os" = "Linux" ]; then
-    if [ ! -z "`ldconfig -p | grep $ALLOCATOR_PATH`" -o ! -z "`ldconfig -p | grep $ALLOCATOR_PATH64`" ]; then
+    dir1="`dirname $ALLOCATOR_PATH 2>/dev/null`"
+    dir2="`dirname $ALLOCATOR_PATH64 2>/dev/null`"
+    if [ ! -z "`ldconfig -p | grep $dir1 2>/dev/null`" -o ! -z "`ldconfig -p | grep $dir2 2>/dev/null`" ]; then
       res=1
     fi
   elif [ "$os" = "FreeBSD" ]; then
-    if [ ! -z "`ldconfig -r | grep $ALLOCATOR_PATH`" -o ! -z "`ldconfig -r | grep $ALLOCATOR_PATH64`" ]; then
+    dir1="`dirname $ALLOCATOR_PATH 2>/dev/null`"
+    dir2="`dirname $ALLOCATOR_PATH64 2>/dev/null`"
+    if [ ! -z "`ldconfig -r | grep $dir1 2>/dev/null`" -o ! -z "`ldconfig -r | grep $dir2 2>/dev/null`" ]; then
       res=1
     fi
   fi
