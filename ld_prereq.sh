@@ -2,8 +2,8 @@
 
 #####################################################################################
 ## The script executes ld prerequisites for custom allocator (Solaris/Linux/FreeBSD).
-## 
-## Version 1.3
+##
+## Version 1.4
 ## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
@@ -63,17 +63,25 @@ check_root()
 write_linux()
 {
   if [ -d $LDCONF_PATH ]; then
-    echo $LD_PATH1 > $LDCONF_PATH/$LDCONF_LINUX1
-    echo $LD_PATH2 >> $LDCONF_PATH/$LDCONF_LINUX1
+    if [ -f $LD_PATH1/$LIB_NAME ]; then
+      echo $LD_PATH1 > $LDCONF_PATH/$LDCONF_LINUX1
+    fi
+    if [ -f $LD_PATH2/$LIB_NAME ]; then
+      echo $LD_PATH2 >> $LDCONF_PATH/$LDCONF_LINUX1
+    fi
   else
-    echo $LD_PATH1 > $LDCONF_PATH1/$LDCONF_LINUX2
-    echo $LD_PATH2 >> $LDCONF_PATH1/$LDCONF_LINUX2
+    if [ -f $LD_PATH1/$LIB_NAME ]; then
+      echo $LD_PATH1 > $LDCONF_PATH1/$LDCONF_LINUX2
+    fi
+    if [ -f $LD_PATH2/$LIB_NAME ]; then
+      echo $LD_PATH2 >> $LDCONF_PATH1/$LDCONF_LINUX2
+    fi
   fi
 }
 
 check_lib()
 {
-   if [ -z "`ls $LD_PATH1/$LIB_NAME`" ] && [ -z "`ls $LD_PATH2/$LIB_NAME`" ]; then
+   if [ -f "$LD_PATH1/$LIB_NAME" ] && [ -f "$LD_PATH2/$LIB_NAME" ]; then
      echo $LD_PATH1/$LIB_NAME
      echo $LD_PATH2/$LIB_NAME
      echo "ERROR: The path(s) being added do not exist. Install allocator first."
