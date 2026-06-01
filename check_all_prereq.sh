@@ -12,7 +12,7 @@ LD_BASE="/usr/local"
 # Set library name to find
 LIB_NAME="*alloc.so"
 
-# Find allocator binary
+# Find allocator lib(s)
 # We assume that there is only one allocator in a given path and it has a corresponding name pattern.
 ALLOCATOR_PATH="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 32 | cut -d':' -f1`"
 ALLOCATOR_PATH64="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 64 | cut -d':' -f1`"
