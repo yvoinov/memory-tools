@@ -3,7 +3,7 @@
 #####################################################################################
 ## The script executes ld prerequisites for custom allocator (Solaris/Linux/FreeBSD).
 ##
-## Version 1.4
+## Version 1.5
 ## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
@@ -13,6 +13,11 @@ LIB_NAME_BASE="*alloc"
 LD_PATH1="$LD_BASE/lib/$LIB_NAME_BASE"
 LD_PATH2="$LD_BASE/lib/$LIB_NAME_BASE/64"
 LIB_NAME="$LIB_NAME_BASE.so"
+
+# Find allocator lib(s)
+# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
+ALLOCATOR_PATH="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 32 | cut -d':' -f1`"
+ALLOCATOR_PATH64="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 64 | cut -d':' -f1`"
 
 # Paths to write
 # Linux
@@ -81,11 +86,15 @@ write_linux()
 
 check_lib()
 {
-   if [ -f "$LD_PATH1/$LIB_NAME" ] && [ -f "$LD_PATH2/$LIB_NAME" ]; then
-     echo $LD_PATH1/$LIB_NAME
-     echo $LD_PATH2/$LIB_NAME
-     echo "ERROR: The path(s) being added do not exist. Install allocator first."
-     exit 2
+  if [ ! -f "$ALLOCATOR_PATH" ] && [ ! -f "$ALLOCATOR_PATH64" ]; then
+    echo "ERROR: The path(s) to libraries being added do not exist. Install allocator first."
+    exit 2
+  fi
+  if [ -f "$ALLOCATOR_PATH" ]; then
+    echo $ALLOCATOR_PATH
+  fi
+  if [ -f "$ALLOCATOR_PATH64" ]; then
+    echo $ALLOCATOR_PATH64
   fi
 }
 
