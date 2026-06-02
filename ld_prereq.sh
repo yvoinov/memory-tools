@@ -3,15 +3,13 @@
 #####################################################################################
 ## The script executes ld prerequisites for custom allocator (Solaris/Linux/FreeBSD).
 ##
-## Version 1.5
+## Version 1.7
 ## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
 # Allocator paths. Change if installed different base.
 LD_BASE="/usr/local"
 LIB_NAME_BASE="*alloc"
-LD_PATH1="$LD_BASE/lib/$LIB_NAME_BASE"
-LD_PATH2="$LD_BASE/lib/$LIB_NAME_BASE/64"
 LIB_NAME="$LIB_NAME_BASE.so"
 
 # Find allocator lib(s)
@@ -19,10 +17,13 @@ LIB_NAME="$LIB_NAME_BASE.so"
 ALLOCATOR_PATH="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 32 | cut -d':' -f1`"
 ALLOCATOR_PATH64="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 64 | cut -d':' -f1`"
 
+LD_PATH1="`dirname $ALLOCATOR_PATH 2>/dev/null`"
+LD_PATH2="`dirname $ALLOCATOR_PATH64 2>/dev/null`"
+
 # Paths to write
 # Linux
-LDCONF_PATH="/etc/ld.so.conf.d"
-LDCONF_PATH1="/etc"
+LDCONF_PATH="/etc"
+LDCONF_PATH_D="$LDCONF_PATH/ld.so.conf.d"
 
 # Config names
 # Linux
@@ -65,25 +66,6 @@ check_root()
   fi
 }
 
-write_linux()
-{
-  if [ -d $LDCONF_PATH ]; then
-    if [ -f $LD_PATH1/$LIB_NAME ]; then
-      echo $LD_PATH1 > $LDCONF_PATH/$LDCONF_LINUX1
-    fi
-    if [ -f $LD_PATH2/$LIB_NAME ]; then
-      echo $LD_PATH2 >> $LDCONF_PATH/$LDCONF_LINUX1
-    fi
-  else
-    if [ -f $LD_PATH1/$LIB_NAME ]; then
-      echo $LD_PATH1 > $LDCONF_PATH1/$LDCONF_LINUX2
-    fi
-    if [ -f $LD_PATH2/$LIB_NAME ]; then
-      echo $LD_PATH2 >> $LDCONF_PATH1/$LDCONF_LINUX2
-    fi
-  fi
-}
-
 check_lib()
 {
   if [ ! -f "$ALLOCATOR_PATH" ] && [ ! -f "$ALLOCATOR_PATH64" ]; then
@@ -95,6 +77,25 @@ check_lib()
   fi
   if [ -f "$ALLOCATOR_PATH64" ]; then
     echo $ALLOCATOR_PATH64
+  fi
+}
+
+write_linux()
+{
+  if [ -d $LD_CONF_PATH_D ]; then
+    if [ -f $ALLOCATOR_PATH ]; then
+      echo $LD_PATH1 > $LD_CONF_PATH_D/$LDCONF_LINUX1
+    fi
+    if [ -f $ALLOCATOR_PATH64 ]; then
+      echo $LD_PATH2 >> $LD_CONF_PATH_D/$LDCONF_LINUX1
+    fi
+  else
+    if [ -f $ALLOCATOR_PATH ]; then
+      echo $LD_PATH1 > $LDCONF_PATH/$LDCONF_LINUX2
+    fi
+    if [ -f $ALLOCATOR_PATH64 ]; then
+      echo $LD_PATH2 >> $LDCONF_PATH/$LDCONF_LINUX2
+    fi
   fi
 }
 
