@@ -85,7 +85,8 @@ check_service_has_one_instance()
   fi
 }
 
-get_env_filtered() {
+get_env_filtered()
+{
   fmri=$1
   line=`svccfg -s "$fmri" listprop start/environment 2>/dev/null`
   set -- $line

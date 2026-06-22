@@ -63,7 +63,8 @@ check_symlink()
   fi
 }
 
-check_ld_config_32() {
+check_ld_config_32()
+{
   if [ -f "$PRELOAD_CONF_32" ]; then
     echo "1"
   else
@@ -71,7 +72,8 @@ check_ld_config_32() {
   fi
 }
 
-check_ld_config_64() {
+check_ld_config_64()
+{
   if [ -f "$PRELOAD_CONF_64" ]; then
     echo "1"
   else
@@ -79,7 +81,8 @@ check_ld_config_64() {
   fi
 }
 
-check_enabled() {
+check_enabled()
+{
   preload_env_32="`crle | grep '\-e LD_PRELOAD_32' | cut -f2 -d'=' | grep -v 'replaceable'`"
   preload_env_64="`crle -64 | grep '\-e LD_PRELOAD_64' | cut -f2 -d'=' | grep -v 'replaceable'`"
   if [ "`check_ld_config_32`" = "1" -o ! -z "$preload_env_32" -o "`check_ld_config_64`" = "1" -o ! -z "$preload_env_64" ]; then
