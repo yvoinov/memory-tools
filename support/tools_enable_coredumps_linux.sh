@@ -1,7 +1,7 @@
 #!/bin/bash
 # tools_enable_coredumps_linux.sh
 #
-# Version 2.0
+# Version 2.1
 # Written by Y.Voinov (C) 2026
 
 set -u
@@ -31,8 +31,9 @@ usage_note()
 Usage: $0 [options]
 
 Options:
+  -h, -H, --help               Show this help
   -n, -N                       Non-interactive mode
-  -c, -C, --limit-choice N     Coredump config choice (1,2,3)
+  -c, -C, --limit-choice N     Coredump config choice (1,2)
   -d, -D, --delete-core Yy|Nn  Delete test coredump
 
 Examples:
@@ -75,7 +76,7 @@ done
 if [ "$NONINTERACTIVE" -eq 1 ]; then
 
   case "${LIMIT_CHOICE:-1}" in
-    1|2|3)
+    1|2)
       ;;
     *)
       echo "Invalid limit choice: $LIMIT_CHOICE"
@@ -99,7 +100,7 @@ nok(){ echo "[NOT OK] $*"; FAIL=$((FAIL+1)); }
 
 check_os()
 {
-  [ "`uname`" == "Linux" ] || { echo "Unsupported OS"; exit 1; }
+  [ "$(uname)" = "Linux" ] || { echo "Unsupported OS"; exit 1; }
   ok "Running on Linux"
 }
 
@@ -198,9 +199,7 @@ detect_backend()
 
   save_state_kv COREDUMP_BACKEND "$BACKEND"
 
-  echo "kernel.core_pattern=$CORE_PATTERN"
-  echo "Detected backend: $BACKEND"
-  ok "Backend detection"
+  ok "Backend detection: $BACKEND"
 }
 
 configure_systemd_limits()
@@ -235,53 +234,42 @@ check_coredump_storage_limits()
   ok "Storage limits checked"
 }
 
-offer_limit_configuration()
+configure_coredump_storage()
 {
   [ "$HAS_SYSTEMD" -eq 1 ] || return 0
 
   echo
   echo "1 - Keep current configuration"
-  echo "2 - Recommended configuration"
-  echo "3 - Unlimited configuration"
+  echo "2 - Configure external compressed storage"
+
   if [ "$NONINTERACTIVE" -eq 1 ]; then
     choice="${LIMIT_CHOICE:-1}"
   else
     printf "Choice [1]: "
-    read choice
+    IFS= read -r choice
     [ -z "${choice:-}" ] && choice=1
   fi
 
   case "$choice" in
-    2|3)
-        mkdir -p /etc/systemd/coredump.conf.d
+    2)
+      mkdir -p /etc/systemd/coredump.conf.d
 
-        if [ "$choice" = "2" ]; then
-          cat > "$COREDUMP_DROPIN" <<EOF
+      cat > "$COREDUMP_DROPIN" <<EOF
 [Coredump]
 Storage=external
 Compress=yes
-ProcessSizeMax=infinity
-ExternalSizeMax=50G
-JournalSizeMax=0
 EOF
-        else
-          cat > "$COREDUMP_DROPIN" <<EOF
-[Coredump]
-Storage=external
-Compress=yes
-ProcessSizeMax=infinity
-ExternalSizeMax=infinity
-JournalSizeMax=infinity
-EOF
-        fi
 
-        save_state_kv COREDUMP_DROPIN_CREATED 1
-        systemctl daemon-reload >/dev/null 2>&1 || true
-        ok "Configured coredump limits"
-        ;;
+      save_state_kv COREDUMP_DROPIN_CREATED 1
+
+      systemctl daemon-reload >/dev/null 2>&1 || true
+
+      ok "Configured coredump storage"
+      ;;
+
     *)
-        ok "Kept current coredump limits"
-        ;;
+      ok "Kept current coredump configuration"
+      ;;
   esac
 }
 
@@ -336,8 +324,8 @@ test_coredump()
       echo $$ >/tmp/coredump_test.pid
       sleep 0.2
       kill -SEGV $$
-    ' >/dev/null 2>&1 || true
-  )
+    ' >/dev/null 2>&1
+  ) >/dev/null 2>&1
 
   TEST_PID=$(cat /tmp/coredump_test.pid 2>/dev/null || true)
 
@@ -451,8 +439,9 @@ show_effective_configuration()
   echo "=== Effective Coredump Configuration ==="
   echo "Backend            : $BACKEND"
   echo "fs.suid_dumpable   : $(cat /proc/sys/fs/suid_dumpable 2>/dev/null)"
-  [ -f "$SYSTEMD_DROPIN" ] && cat $SYSTEMD_DROPIN
-  [ -f "$COREDUMP_DROPIN" ] && cat $COREDUMP_DROPIN
+  echo "kernel.core_pattern: $(cat /proc/sys/kernel/core_pattern)"
+  [ -f "$SYSTEMD_DROPIN" ] && cat "$SYSTEMD_DROPIN"
+  [ -f "$COREDUMP_DROPIN" ] && cat "$COREDUMP_DROPIN"
 }
 
 summary()
@@ -470,7 +459,7 @@ configure_suid_dumpable
 detect_backend
 configure_systemd_limits
 check_coredump_storage_limits
-offer_limit_configuration
+configure_coredump_storage
 test_coredump
 locate_test_coredump
 delete_test_coredump
