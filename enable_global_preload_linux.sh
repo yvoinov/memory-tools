@@ -30,7 +30,7 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "  -h, -H, --help   show this help"
-  echo "  -n, -N,          non-interactive mode for automation"
+  echo "  -n, -N           non-interactive mode for automation"
   echo "  -l, -L           make hard link in system libs"
   echo "  -32              32 bit allocator preload on 32 bit OS"
   echo
