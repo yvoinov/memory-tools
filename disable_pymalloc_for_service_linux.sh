@@ -26,8 +26,8 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` <service_name> [options]"
   echo "Options:"
-  echo "    -h, -H, ?   show this help"
-  echo "    -d, -D      disable libC PYTHONMALLOC and delete drop-in"
+  echo "    -h, -H, --help   show this help"
+  echo "    -d, -D           disable libC PYTHONMALLOC and delete drop-in"
   echo "Example 1 (enable using libC malloc): `basename $0` tuned"
   echo "Example 2 (disable using libC malloc): `basename $0` tuned -d"
   exit 0
@@ -111,7 +111,7 @@ SERVICE_NAME=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    -h|-H|\?)
+    -h|-H|--help)
       usage_note
     ;;
     -d|-D)
