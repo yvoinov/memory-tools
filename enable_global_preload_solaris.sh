@@ -60,7 +60,7 @@ usage_note()
   echo "Options:"
   echo "  -h, -H, --help   show this help"
   echo "  -n, -N           non-interactive mode for automation"
-  echo '  -e, -E, -e|-E "-e|-E VAR1=value -e|-E VAR2=value ...", extra global environment variables'
+  echo '  -e|-E "-e|-E VAR1=value -e|-E VAR2=value ...", extra global environment variables'
   echo ""
   echo "Note: Additional global environment variables are typically used to parameterize the allocator."
   echo "      It can also be used to set other global environment variables that affect all processes"
