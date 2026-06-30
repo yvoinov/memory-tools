@@ -42,8 +42,8 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "    -v, -V	Verbose. Show details."
-  echo "    -h, -H, ?   show this help"
+  echo "    -v, -V	     Verbose. Show details."
+  echo "    -h, -H, --help   show this help"
   exit 0
 }
 
@@ -218,7 +218,7 @@ if [ "x$*" != "x" ]; then
     case $i in
      -v|-V) verbose="1"
      ;;
-     -h|-H|\?) usage_note
+     -h|-H|--help) usage_note
      ;;
      *) shift
      ;;
