@@ -28,9 +28,9 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "  -h, -H, --help   show this help"
-  echo "  -n, -N           non-interactive mode for automation"
-  echo '  -e|-E "VAR1=value VAR2=value ...", extra environment variables'
+  echo "  -h, -H, --help                     show this help"
+  echo "  -n, -N                             non-interactive mode for automation"
+  echo '  -e|-E "VAR1=value VAR2=value ..."  extra environment variables'
   echo ""
   echo "Note: Additional global environment variables are typically used to parameterize the allocator."
   echo "      It can also be used to set other global environment variables that affect services/programs."
