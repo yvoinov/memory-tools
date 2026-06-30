@@ -3,7 +3,7 @@
 
 ## Memory-related and performance tools
 
-These tools are designed to perform prerequisites and performance improvements for custom allocators.
+These tools are designed to perform prerequisites, performance improvements and diagnostics for custom allocators.
 
 Although they were originally developed for LMA, it is not difficult to adapt them to any custom allocator since the requirements are approximately the same.
 
