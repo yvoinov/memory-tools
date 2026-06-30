@@ -1,7 +1,7 @@
 #!/bin/bash
 # tools_enable_coredumps_linux.sh
 #
-# Version 2.1
+# Version 2.2
 # Written by Y.Voinov (C) 2026
 
 set -u
@@ -191,15 +191,48 @@ detect_backend()
   CORE_PATTERN=$(cat /proc/sys/kernel/core_pattern)
   BACKEND=file
 
+  save_state_kv ORIGINAL_CORE_PATTERN "$CORE_PATTERN"
+
   case "$CORE_PATTERN" in
-    *systemd-coredump*) BACKEND=systemd-coredump ;;
-    *abrt*) BACKEND=abrt ;;
-    \|*) BACKEND=external-handler ;;
+    *systemd-coredump*)
+      BACKEND=systemd-coredump
+      ;;
+
+    *abrt*)
+      BACKEND=abrt
+      ;;
+
+    \|*)
+      BACKEND=external-handler
+      ;;
+
+    *)
+      BACKEND=file
+      ;;
   esac
 
   save_state_kv COREDUMP_BACKEND "$BACKEND"
 
   ok "Backend detection: $BACKEND"
+}
+
+configure_external_handler()
+{
+    [ "$BACKEND" = "external-handler" ] || return 0
+
+    mkdir -p /var/crash || {
+        nok "Unable to create /var/crash"
+        return 1
+    }
+
+    echo "/var/crash/core.%e.%p.%t" > /proc/sys/kernel/core_pattern || {
+        nok "Failed to replace external coredump handler"
+        return 1
+    }
+
+    echo 0 > /proc/sys/kernel/core_uses_pid 2>/dev/null || true
+
+    ok "Temporarily replaced external coredump handler"
 }
 
 configure_systemd_limits()
@@ -319,6 +352,11 @@ test_coredump()
 
   rm -f /tmp/coredump_test.pid
 
+  ulimit -c unlimited || {
+    nok "Unable to set core size limit"
+    return
+  }
+
   (
     /bin/bash -c '
       echo $$ >/tmp/coredump_test.pid
@@ -355,8 +393,13 @@ test_coredump()
     return
   fi
 
-  FILE=$(ls -1 /var/lib/coredumps/core-* 2>/dev/null | grep "$TEST_PID" || true)
-  [ -n "$FILE" ] && ok "Coredump detected (file backend)" || nok "Coredump not detected (file backend)"
+  locate_test_coredump
+
+  if [ -n "${TEST_FILE:-}" ]; then
+    ok "Coredump detected (file backend)"
+  else
+    nok "Coredump not detected (file backend)"
+  fi
 }
 
 locate_test_coredump()
@@ -457,6 +500,7 @@ detect_features
 configure_limits
 configure_suid_dumpable
 detect_backend
+configure_external_handler
 configure_systemd_limits
 check_coredump_storage_limits
 configure_coredump_storage
