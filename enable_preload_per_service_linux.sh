@@ -36,7 +36,7 @@ usage_note()
   echo "Usage: `basename $0` <service-name> [options]"
   echo "Options:"
   echo "    -h, -H, --help   show this help"
-  echo '    -e, -E, -e|-E "VAR1=value VAR2=value ...", extra environment variables'
+  echo '    -e|-E "VAR1=value VAR2=value ...", extra environment variables'
   echo "Example: `basename $0` apache2"
   exit 0
 }
