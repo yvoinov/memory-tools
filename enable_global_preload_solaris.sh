@@ -58,7 +58,8 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "  -n, -N, non-interactive mode for automation"
+  echo "  -h, -H, --help   show this help"
+  echo "  -n, -N           non-interactive mode for automation"
   echo '  -e, -E, -e|-E "-e|-E VAR1=value -e|-E VAR2=value ...", extra global environment variables'
   echo ""
   echo "Note: Additional global environment variables are typically used to parameterize the allocator."
@@ -260,7 +261,7 @@ EXTRA_ENV=""
 # Parse command line options
 while getopts "hH?nNe:E:" opt; do
   case "$opt" in
-    h|H|\?)
+    h|H|help)
       usage_note
       ;;
     n|N)
