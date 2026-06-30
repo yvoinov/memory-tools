@@ -28,10 +28,10 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "    -c, -C	Clears configs if previous ones were not saved."
-  echo "                This means that there were no configurations"
-  echo"                 other than the default."
-  echo "    -h, -H, ?   show this help"
+  echo "    -c, -C           Clears configs if previous ones were not saved."
+  echo "                     This means that there were no configurations"
+  echo"                      other than the default."
+  echo "    -h, -H, --help   show this help"
   exit 0
 }
 
@@ -139,7 +139,7 @@ if [ "x$*" != "x" ]; then
   for i in $arg_list
   do
     case $i in
-      -h|-H|\?)
+      -h|-H|--help)
         usage_note
       ;;
       -c|-C)
