@@ -110,7 +110,7 @@ while [ $# -gt 0 ]; do
     -e|-E)
       disable_extra_env="1"
     ;;
-    -h|-H|\?)
+    -h|-H|--help)
       usage_note
     ;;
     *)
