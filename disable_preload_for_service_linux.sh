@@ -36,9 +36,9 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` <service_name> [options]"
   echo "Options:"
-  echo "    -h, -H, ?   show this help"
-  echo "    -d, -D      disable preload and remove drop-in completely"
-  echo "    -e, -E      disable extra-env and remove it drop-in completely if any"
+  echo "    -h, -H, --help   show this help"
+  echo "    -d, -D           disable preload and remove drop-in completely"
+  echo "    -e, -E           disable extra-env and remove it drop-in completely if any"
   echo "Example 1 (per-service workaround): `basename $0` apache2"
   echo "Example 2 (completely disable): `basename $0` apache2 -d"
   exit 0
