@@ -56,7 +56,19 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 <ins>Support</ins>
 
 `tools_enable_coredumps_linux.sh` enables coredumps (Linux)
+```
+Usage: tools_enable_coredumps_linux.sh [options]
 
+Options:
+  -h, -H, --help               Show this help
+  -n, -N                       Non-interactive mode
+  -c, -C, --limit-choice N     Coredump config choice (1,2)
+  -d, -D, --delete-core Yy|Nn  Delete test coredump
+
+Examples:
+  tools_enable_coredumps_linux.sh
+  tools_enable_coredumps_linux.sh -n -c 2 -d Y
+```
 `tools_enable_coredumps_solaris.sh` enables coredumps (Solaris)
 
 `tools_enable_coredumps_freebsd.sh` enables coredumps (FreeBSD)
@@ -72,7 +84,35 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 `tools_disable_coredumps_aix.sh` disables coredumps (AIX)
 
 `tools_analyze_core_linux.sh` extracts a stacktrace from the coredump (Linux)
+```
+Usage: tools_analyze_core_linux.sh CORE [options]
 
+Options:
+  -e, -E FILE      Specify executable image
+  -h, -H, --help   Show this help
+
+Examples:
+    tools_analyze_core_linux.sh core.12345 -e ./my_program
+```
 `tools_analyze_core_solaris.sh` extracts a stacktrace from the coredump (Solaris)
+```
+Usage: tools_analyze_core_solaris.sh CORE [options]
 
+Options:
+  -e, -E FILE      Specify executable image
+  -h, -H, --help   Show this help
+
+Examples:
+    tools_analyze_core_solaris.sh core.12345 -e ./my_program
+```
 `tools_analyze_core_freebsd.sh`  extracts a stacktrace from the coredump (FreeBSD)
+```
+Usage: tools_analyze_core_freebsd.sh CORE [options]
+
+Options:
+  -e, -E FILE      Specify executable image
+  -h, -H, --help   Show this help
+
+Examples:
+    tools_analyze_core_freebsd.sh core.12345 -e ./my_program
+```
