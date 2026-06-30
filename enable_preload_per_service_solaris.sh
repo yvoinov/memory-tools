@@ -32,7 +32,7 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` <service-fmri> [options]"
   echo "Options:"
-  echo "    -h, -H, ?   show this help"
+  echo "    -h, -H, --help   show this help"
   echo '    -e, -E, -e|-E "VAR1=value VAR2=value ...", extra environment variables'
   echo ""
   echo "Note: Additional environment variables are typically used to parameterize the allocator."
@@ -145,7 +145,7 @@ EXTRA_ENV=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    -h|-H|\?)
+    -h|-H|--help)
       usage_note
       ;;
     -e|-E)
