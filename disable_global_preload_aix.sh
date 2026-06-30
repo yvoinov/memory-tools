@@ -27,7 +27,7 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "    -h, -H, ?   show this help"
+  echo "    -h, -H, --help   show this help"
   echo "Note: The script DOES NOT REMOVE additional global environment variables if they were defined."
   echo "      You must remove them manually if necessary."
   exit 0
@@ -57,7 +57,7 @@ if [ "x$*" != "x" ]; then
   for i in $arg_list
   do
     case $i in
-      -h|-H|\?)
+      -h|-H|--help)
         usage_note
       ;;
       *) shift
