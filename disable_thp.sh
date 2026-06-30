@@ -6,7 +6,7 @@
 ## To turn it back on, do systemctl disable disable-thp && systemctl stop disable-thp
 ##
 ## Version 1.1
-## Written by Y.Voinov (C) 2022-2025
+## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
 # Path to write unit
@@ -27,7 +27,7 @@ usage_note()
   echo "Just run it and reboot system. Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "    -h, -H, ?   show this help"
+  echo "    -h, -H, --help   show this help"
   exit 0
 }
 
@@ -78,7 +78,7 @@ if [ "x$*" != "x" ]; then
   for i in $arg_list
   do
     case $i in
-      -h|-H|\?)
+      -h|-H|--help)
         usage_note
       ;;
       *)
