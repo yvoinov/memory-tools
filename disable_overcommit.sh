@@ -4,7 +4,7 @@
 ## The script sets up LMA OS-wide performance prerequisites.
 ##
 ## Version 1.2
-## Written by Y.Voinov (C) 2022-2025
+## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
 # Sysctl config path
