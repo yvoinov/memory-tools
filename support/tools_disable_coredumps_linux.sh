@@ -1,7 +1,7 @@
 #!/bin/bash
 # tools_disable_coredumps_linux.sh
 #
-# Version 2.0
+# Version 2.2
 # Written by Y.Voinov (C) 2026
 
 set -u
@@ -63,6 +63,14 @@ restore_systemd()
   }
 }
 
+restore_core_pattern()
+{
+  if [ -n "${ORIGINAL_CORE_PATTERN:-}" ]; then
+    printf '%s\n' "$ORIGINAL_CORE_PATTERN" > /proc/sys/kernel/core_pattern \
+      2>/dev/null || true
+  fi
+}
+
 cleanup()
 {
   rm -f "$STATE_FILE"
@@ -74,8 +82,9 @@ load_state
 restore_limits
 restore_suid_dumpable
 restore_systemd
+restore_core_pattern
 cleanup
 
-echo "kernel.core_pattern intentionally left unchanged"
+echo "Original coredump configuration restored"
 echo "Done"
 exit 0
