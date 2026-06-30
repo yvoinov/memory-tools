@@ -29,9 +29,9 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` <service_fmri> [options]"
   echo "Options:"
-  echo "    -d, -D      disable per-service preload"
-  echo "    -n, -N      do not restart service"
-  echo "    -h, -H, ?   show this help"
+  echo "    -d, -D           disable per-service preload"
+  echo "    -n, -N           do not restart service"
+  echo "    -h, -H, --help   show this help"
   echo "Example 1 (per-service workaround): `basename $0` cswapache2:default"
   echo "Example 2 (completely disable): `basename $0` cswapache2:default -d"
   echo "Note 1: The script DOES NOT REMOVE additional environment variables if they were defined."
@@ -193,7 +193,7 @@ while [ $# -gt 0 ]; do
     -n|-N)
       disable_restart="1"
     ;;
-    -h|-H|\?)
+    -h|-H|--help)
       usage_note
     ;;
     *)
