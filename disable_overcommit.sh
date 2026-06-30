@@ -36,7 +36,7 @@ usage_note()
   echo "Reboot is recommended, but non-required. Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "    -h, -H, ?   show this help"
+  echo "    -h, -H, --help   show this help"
   exit 0
 }
 
@@ -133,7 +133,7 @@ if [ "x$*" != "x" ]; then
   for i in $arg_list
   do
     case $i in
-      -h|-H|\?)
+      -h|-H|--help)
         usage_note
       ;;
       *)
