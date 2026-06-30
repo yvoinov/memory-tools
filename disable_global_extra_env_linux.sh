@@ -25,7 +25,7 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "    -h, -H, ?   show this help"
+  echo "    -h, -H, --help   show this help"
   echo ""
   echo "Note: All extra env configs with filename $CONF_EXTRA_ENV_FILE will be removed."
   exit 0
@@ -74,7 +74,7 @@ remove_drop_in()
 # Main
 while [ $# -gt 0 ]; do
   case "$1" in
-    -h|-H|\?)
+    -h|-H|--help)
       usage_note
     ;;
     *)
