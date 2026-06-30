@@ -25,8 +25,8 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "    -h, -H, --help   show this help"
-  echo '    -e|-E "VAR1=value VAR2=value ...", extra environment variables'
+  echo "    -h, -H, --help                     show this help"
+  echo '    -e|-E "VAR1=value VAR2=value ..."  extra environment variables'
   echo 'Example: `basename $0` -e "FOO=value1 BAR=value2"'
   exit 0
 }
