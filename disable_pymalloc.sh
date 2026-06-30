@@ -23,8 +23,8 @@ usage_note()
   echo "Just run it and re-login system. Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "    -h, -H, ?   show this help"
-  echo "    -d, -D      disable libC PYTHONMALLOC in $GLOBAL_ENV"
+  echo "    -h, -H, --help   show this help"
+  echo "    -d, -D           disable libC PYTHONMALLOC in $GLOBAL_ENV"
   exit 0
 }
 
@@ -69,7 +69,7 @@ disable_libc="0"
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    -h|-H|\?)
+    -h|-H|--help)
       usage_note
     ;;
     -d|-D)
