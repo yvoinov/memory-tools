@@ -24,7 +24,7 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` <service_name> [options]"
   echo "Options:"
-  echo "    -h, -H, ?   show this help"
+  echo "    -h, -H, --help   show this help"
   echo "Example (completely disable extra env): `basename $0` apache2"
   exit 0
 }
@@ -81,7 +81,7 @@ SERVICE_NAME=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    -h|-H|\?)
+    -h|-H|--help)
       usage_note
     ;;
     *)
