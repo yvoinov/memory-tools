@@ -52,3 +52,27 @@ All utilities are run as root (since sudo may not necessarily be installed). Rea
 `disable_extra_env_per_service_linux.sh` disables extra env for specified systemd service.
 
 **Note**: The "Support" directory contains auxiliary tools for debugging and support.
+
+<ins>Support</ins>
+
+`tools_enable_coredumps_linux.sh` enables coredumps (Linux)
+
+`tools_enable_coredumps_solaris.sh` enables coredumps (Solaris)
+
+`tools_enable_coredumps_freebsd.sh` enables coredumps (FreeBSD)
+
+`tools_enable_coredumps_aix.sh` enables coredumps (AIX)
+
+`tools_disable_coredumps_linux.sh` disables coredumps (Linux)
+
+`tools_disable_coredumps_solaris.sh` disables coredumps (Solaris)
+
+`tools_disable_coredumps_freebsd.sh` disables coredumps (FreeBSD)
+
+`tools_disable_coredumps_aix.sh` disables coredumps (AIX)
+
+`tools_analyze_core_linux.sh` extracts a stacktrace from the coredump (Linux)
+
+`tools_analyze_core_solaris.sh` extracts a stacktrace from the coredump (Solaris)
+
+`tools_analyze_core_freebsd.sh`  extracts a stacktrace from the coredump (FreeBSD)
