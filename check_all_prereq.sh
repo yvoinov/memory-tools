@@ -3,7 +3,7 @@
 #####################################################################################
 ## The script checks all prerequisites for custom allocator
 ##
-## Version 1.5
+## Version 1.7
 ## Written by Y.Voinov (C) 2023-2026
 #####################################################################################
 
@@ -38,7 +38,7 @@ ALL_OK="0"
 # Subroutines
 usage_note()
 {
-  echo "The script checks all prerequisites for custom allocator"
+  echo "The script checks all prerequisites for custom allocator."
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
@@ -51,11 +51,27 @@ verbose_output()
 {
   if [ "$verbose" = "1" ]; then
     echo .
-    echo "$1: $2"
-    if [ ! -z "$3" ]; then
-      echo "$3: $4"
+    echo "$1"
+    echo "$2: $3"
+    if [ ! -z "$4" ]; then
+      echo "$4: $5"
     fi
   fi
+}
+
+log_ok()
+{
+    echo "[OK] $*"
+}
+
+log_nok()
+{
+    echo "[NOT OK] $*" >&2
+}
+
+log_error()
+{
+    echo "[ERROR] $*" >&2
 }
 
 check_os()
@@ -67,7 +83,7 @@ check_os()
   elif [ "`uname`" = "FreeBSD" ]; then
     echo "FreeBSD"
   else
-    echo "ERROR: Unsupported OS."
+    log_error "Unsupported OS"
     exit 1
   fi
 }
@@ -75,15 +91,17 @@ check_os()
 check_root()
 {
   if [ -z "`id | grep 'uid=0(root)'`" ]; then
-    echo "ERROR: Must be run as root."
+    log_error "Must be run as root"
     exit 3
+  else
+    log_ok "Running as root"
   fi
 }
 
 check_lib()
 {
-  printf "Checking custom allocator installed..."
   if [ "$verbose" = "1" ]; then
+    echo "Checking custom allocator installed..."
     echo .
     if [ -f "$ALLOCATOR_PATH" ]; then
       echo $ALLOCATOR_PATH
@@ -93,16 +111,15 @@ check_lib()
     fi
   fi
   if [ ! -f "$ALLOCATOR_PATH" -a ! -f "$ALLOCATOR_PATH64" ]; then
-    echo "NOT OK"
+    log_nok "Allocator not found"
     ALL_OK="1"
   else
-    echo "OK"
+    log_ok "Allocator found"
   fi
 }
 
 check_swap()
 {
-  printf "Checking RAM/swap ratio..."
   if [ "$os" = "SunOS" ]; then
     cmd1="`swap -l | awk -F'[^0-9]*' '$0=$5'`"
     swap_size="`expr $cmd1 \* 512`"
@@ -116,71 +133,65 @@ check_swap()
     swap_size="`expr $cmd1 \* 1024`"
     ram_size="`sysctl hw.physmem | awk '{ print $2 }'`"
   fi
-  verbose_output "RAM size " "$ram_size" "Swap size" "$swap_size"
+  verbose_output "Checking RAM/swap ratio..." "RAM size " "$ram_size" "Swap size" "$swap_size"
   if [ "$swap_size" -ge "$ram_size" ]; then
-    echo "OK"
+    log_ok "RAM/swap ratio"
   else
-    echo "NOT OK"
+    log_nok "Insufficient RAM/swap ratio"
     ALL_OK="1"
   fi
 }
 
 check_thp()
 {
-  printf "Checking THP status..."
   cmd="`sysctl vm.nr_hugepages | awk '{ print $3 }'`"
-  verbose_output "THP" "$cmd"
+  verbose_output "Checking THP status..." "THP" "$cmd"
   if [ "$cmd" = "0" ]; then
-    echo "OK"
+    log_ok "THP disabled"
   else
-    echo "NOT OK"
+    log_nok "THP still enabled"
     ALL_OK="1"
   fi
 }
 
 check_recommended_vm_settings()
 {
-  printf "Checking overcommit status..."
   cmd1="`sysctl $SYSCTL_FILE_STR1 | cut -d' ' -f3`"
-  verbose_output "Acceptable values" "$OVERCOMMIT1 $OVERCOMMIT2" "Specified value" "$cmd1"
+  verbose_output "Checking status $SYSCTL_FILE_STR1..." "Acceptable values" "$OVERCOMMIT1 $OVERCOMMIT2" "Specified value" "$cmd1"
   if [ "$cmd1" = "$OVERCOMMIT2" ] || [ "$cmd1" = "$OVERCOMMIT1" ]; then
-    echo "OK"
+    log_ok "Overcommit disabled"
   else
-    echo "NOT OK"
+    log_nok "Overtommit still enabled"
     ALL_OK="1"
   fi
-  printf "Checking overcommit ratio..."
   cmd2="`sysctl $SYSCTL_FILE_STR2 | cut -d' ' -f3`"
-  verbose_output "Acceptable values" "$OVERCOMMIT_RATIO" "Specified value" "$cmd2"
+  verbose_output "Checking $SYSCTL_FILE_STR2..." "Acceptable values" "$OVERCOMMIT_RATIO" "Specified value" "$cmd2"
   if [ "$cmd2" -ge "$OVERCOMMIT_RATIO" ]; then
-    echo "OK"
+    log_ok "$SYSCTL_FILE_STR2"
   else
-    echo "NOT OK"
+    log_nok "$SYSCTL_FILE_STR2"
     ALL_OK="1"
   fi
-  printf "Checking vfs_cache_pressure..."
   cmd3="`sysctl $SYSCTL_FILE_STR3 | cut -d' ' -f3`"
-  verbose_output "Acceptable values" "$VFS_CACHE_PRESSURE" "Specified value" "$cmd3"
+  verbose_output "Checking $SYSCTL_FILE_STR3..." "Acceptable values" "$VFS_CACHE_PRESSURE" "Specified value" "$cmd3"
   if [ "$cmd3" -le "$VFS_CACHE_PRESSURE" ]; then
-    echo "OK"
+    log_ok "$SYSCTL_FILE_STR3"
   else
-    echo "NOT OK"
+    log_nok "$SYSCTL_FILE_STR3"
     ALL_OK="1"
   fi
-  printf "Checking swappiness..."
   cmd4="`sysctl $SYSCTL_FILE_STR4 | cut -d' ' -f3`"
-  verbose_output "Acceptable values" "$SWAPPINESS" "Specified value" "$cmd4"
+  verbose_output "Checking $SYSCTL_FILE_STR4..." "Acceptable values" "$SWAPPINESS" "Specified value" "$cmd4"
   if [ "$cmd4" -ge "$SWAPPINESS" ]; then
-    echo "OK"
+    log_ok "$SYSCTL_FILE_STR4"
   else
-    echo "NOT OK"
+    log_nok "$SYSCTL_FILE_STR4"
     ALL_OK="1"
   fi
 }
 
 check_ld_conditions()
 {
-  printf "Checking LD.SO conditions..."
   res="0"
   if [ "$os" = "SunOS" ]; then
     if [ ! -z "`crle | grep $ALLOCATOR_PATH`" -a ! -z "`crle -64 | grep $ALLOCATOR_PATH64`" ]; then
@@ -199,11 +210,11 @@ check_ld_conditions()
       res=1
     fi
   fi
-  verbose_output "LD.SO prerequisites" "$res"
+  verbose_output "Checking LD.SO conditions..." "LD.SO prerequisites" "$res"
   if [ "$res" = "1" ]; then
-    echo "OK"
+    log_ok "LD.SO prerequisites"
   else
-    echo "NOT OK"
+    log_nok "LD.SO prerequisites"
     ALL_OK="1"
   fi
 }
