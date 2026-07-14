@@ -317,7 +317,7 @@ if [ "$non_interactive" = "0" ]; then
           exit
       ;;
       *)
-        printf 'Please answer y/Y or n/N\n'
+          printf 'Please answer y/Y or n/N\n'
       ;;
     esac
   done
