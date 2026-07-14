@@ -61,17 +61,17 @@ verbose_output()
 
 log_ok()
 {
-    echo "[OK] $*"
+  printf "[OK] $*\n"
 }
 
 log_nok()
 {
-    echo "[NOT OK] $*" >&2
+  printf "[NOT OK] $*\n" >&2
 }
 
 log_error()
 {
-    echo "[ERROR] $*" >&2
+  printf "[ERROR] $*\n" >&2
 }
 
 check_os()
@@ -93,9 +93,8 @@ check_root()
   if [ -z "`id | grep 'uid=0(root)'`" ]; then
     log_error "Must be run as root"
     exit 3
-  else
-    log_ok "Running as root"
   fi
+  log_ok "Running as root"
 }
 
 check_lib()
@@ -252,15 +251,15 @@ if [ "$os" = "Linux" ]; then
   check_recommended_vm_settings
 fi
 
-printf "Done. "
+log_ok "Done"
 
 if [ "$ALL_OK" = "0" ]; then
-  echo "All prerequisites OK."
+  log_ok "All prerequisites OK"
   exit 0
 else
-  echo "Any/all prerequisites NOT OK."
+  log_info "Any/all prerequisites NOT OK"
   if [ "$verbose" = "0" ]; then
-    echo "Run in verbose mode to see details."
+    log_info "Run in verbose mode to see details"
   fi
   exit 1
 fi
