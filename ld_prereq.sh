@@ -46,17 +46,17 @@ usage_note()
 
 log_ok()
 {
-    echo "[OK] $*"
+  printf "[OK] $*\n"
 }
 
 log_info()
 {
-    echo "[INFO] $*" >&2
+  printf "[INFO] $*\n" >&2
 }
 
 log_error()
 {
-    echo "[ERROR] $*" >&2
+  printf "[ERROR] $*\n" >&2
 }
 
 check_os()
@@ -78,9 +78,8 @@ check_root()
   if [ -z "`id | grep 'uid=0(root)'`" ]; then
     log_error "Must be run as root"
     exit 3
-  else
-    log_ok "Running as root"
   fi
+  log_ok "Running as root"
 }
 
 check_lib()
@@ -182,5 +181,5 @@ elif [ "`check_os`" = "FreeBSD" ]; then
   write_freebsd
 fi
 
-echo "Done."
+log_ok "Done"
 exit 0
