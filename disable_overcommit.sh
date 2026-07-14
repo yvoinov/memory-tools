@@ -80,7 +80,7 @@ check_container()
   if [ -n "$(grep 'kthreadd' /proc/2/status 2>/dev/null)" ]; then
     log_ok "Not in container"
   else
-    log_info "In container. If it unprivileged, permission denied can occurs"
+    log_info "In container. If the container is unprivileged, some parameters cannot be changed"
   fi
 }
 
@@ -216,7 +216,7 @@ check_container
 check_running_values
 update_sysctl_config
 
-if set_config; then
+if update_sysctl_config; then
   log_info "Applying sysctl settings..."
   sysctl --system >/dev/null 2>&1
 fi
