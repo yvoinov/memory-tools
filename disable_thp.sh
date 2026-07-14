@@ -5,7 +5,7 @@
 ## After installation and reboot, THP will be turned off globally.
 ## To turn it back on, do systemctl disable disable-thp && systemctl stop disable-thp
 ##
-## Version 1.1
+## Version 1.2
 ## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
@@ -25,26 +25,43 @@ usage_note()
 {
   echo "The script creates and installs a service that disables THP on Linux."
   echo "Just run it and reboot system. Must be run as root."
-  echo "Usage: `basename $0` [options]"
+  echo "Usage: $(basename "$0") [options]"
   echo "Options:"
   echo "    -h, -H, --help   show this help"
   exit 0
 }
 
+log_ok()
+{
+  printf "[OK] $*\n"
+}
+
+log_info()
+{
+  printf "[INFO] $*\n" >&2
+}
+
+log_error()
+{
+  printf "[ERROR] $*\n" >&2
+}
+
 check_os()
 {
-  if [ "`uname`" != "Linux" ]; then
-    echo "ERROR: This script is for Linux only."
+  if [ "$(uname)" != "Linux" ]; then
+    log_error "This script is for Linux only"
     exit 2
   fi
+  log_ok "Running on Linux"
 }
 
 check_root()
 {
-  if [ -z "`id | grep 'uid=0(root)'`" ]; then
-    echo "ERROR: Must be run as root."
+  if [ "$(id -u)" -ne 0 ]; then
+    log_error "Must be run as root"
     exit 3
   fi
+  log_ok "Running as root"
 }
 
 check_and_set_thp_path()
@@ -54,7 +71,7 @@ check_and_set_thp_path()
   elif [ -d "$VALUE_PATH_BASE/$VALUE_PATH_RH" ]; then
     echo "$VALUE_PATH_BASE/$VALUE_PATH_RH"
   else
-    echo "ERROR: THP path not found."
+    log_error "THP path not found"
     exit 1
   fi
 }
@@ -94,7 +111,7 @@ check_root
 if [ ! -f "$UNIT_PATH/$UNIT_FILE_NAME" ]; then
   write_service > $UNIT_PATH/$UNIT_FILE_NAME
 else
-  echo "WARNING: Unit already exists."
+  log_info "Unit already exists"
 fi
 
 systemctl daemon-reload
@@ -105,5 +122,5 @@ else
   systemctl enable disable-thp
 fi
 
-echo "Done. Please reboot this system now."
+log_ok "Done. Please reboot this system now"
 exit 0
