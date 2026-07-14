@@ -1,20 +1,22 @@
 #!/bin/sh
 
 #####################################################################################
-## The script sets up LMA OS-wide performance prerequisites.
+## The script sets up custom allocator OS-wide performance prerequisites.
 ##
-## Version 1.2
+## Version 2.0
 ## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
+
+set -e
 
 # Sysctl config path
 CONFIG_BASE="/etc"
 SYSCTL_PATH="$CONFIG_BASE/sysctl.d"
 SYSCTL_FILE="$CONFIG_BASE/sysctl.conf"
-CONFIG_NAME="10-lma.conf"
+CONFIG_NAME="10-mt_custom.conf"
 
 # Write file content
-SYSCTL_FILE_STR1="# System tweaks by TCW"
+SYSCTL_FILE_STR1="# System tweaks for custom allocator"
 # Note: Don't set swappiness too low on Proxmox/KVM or create big enough swap.
 SYSCTL_FILE_STR2="vm.swappiness = 30"
 SYSCTL_FILE_STR3="vm.vfs_cache_pressure = 50"
@@ -32,97 +34,161 @@ SYSCTL_STR5_EXIST=""
 # Subroutines
 usage_note()
 {
-  echo "The script sets up LMA OS-wide prerequisites."
+  echo "The script sets up custom allocator OS-wide prerequisites."
   echo "Reboot is recommended, but non-required. Must be run as root."
-  echo "Usage: `basename $0` [options]"
+  echo "Usage: $(basename "$0") [options]"
   echo "Options:"
   echo "    -h, -H, --help   show this help"
   exit 0
 }
 
+log_ok()
+{
+  printf "[OK] $*\n"
+}
+
+log_info()
+{
+  printf "[INFO] $*\n" >&2
+}
+
+log_error()
+{
+  printf "[ERROR] $*\n" >&2
+}
+
 check_os()
 {
-  if [ "`uname`" != "Linux" ]; then
-    echo "ERROR: This script is for Linux only."
+  if [ "$(uname)" != "Linux" ]; then
+    log_error "This script is for Linux only"
     exit 2
   fi
+  log_ok "Running on Linux"
 }
 
 check_root()
 {
-  if [ -z "`id | grep 'uid=0(root)'`" ]; then
-    echo "ERROR: Must be run as root."
+  if [ "$(id -u)" -ne 0 ]; then
+    log_error "Must be run as root"
     exit 3
+  fi
+  log_ok "Running as root"
+}
+
+check_container()
+{
+  if [ -n "$(grep 'kthreadd' /proc/2/status 2>/dev/null)" ]; then
+    log_ok "Not in container"
+  else
+    log_info "In container. If it unprivileged, permission denied can occurs"
   fi
 }
 
-check_config()
+# Get sysctl key from "key = value"
+get_sysctl_key()
 {
-  if [ ! -z "`sysctl --system | grep "\b$SYSCTL_FILE_STR1\b"`" ]; then
-    echo "Value $SYSCTL_FILE_STR1 exists."
-    SYSCTL_STR1_EXIST="1"
+  printf '%s\n' "${1%% = *}"
+}
+
+# Get sysctl value from "key = value"
+get_sysctl_value()
+{
+  printf '%s\n' "${1##* = }"
+}
+
+check_sysctl()
+{
+  line=$1
+
+  key=$(get_sysctl_key "$line")
+  value=$(get_sysctl_value "$line")
+
+  [ "$(sysctl -n "$key" 2>/dev/null)" = "$value" ]
+}
+
+config_contains()
+{
+  line=$1
+  file=$2
+
+  grep -F -x -q "$line" "$file" 2>/dev/null
+}
+
+check_running_values()
+{
+  if check_sysctl "$SYSCTL_FILE_STR2"; then
+    log_info "Value '$SYSCTL_FILE_STR2' already active"
+    SYSCTL_STR2_EXIST=1
   fi
-  if [ ! -z "`sysctl --system | grep "\b$SYSCTL_FILE_STR2\b"`" ]; then
-    echo "Value $SYSCTL_FILE_STR2 exists."
-    SYSCTL_STR2_EXIST="1"
+
+  if check_sysctl "$SYSCTL_FILE_STR3"; then
+    log_info "Value '$SYSCTL_FILE_STR3' already active"
+    SYSCTL_STR3_EXIST=1
   fi
-  if [ ! -z "`sysctl --system | grep "\b$SYSCTL_FILE_STR3\b"`" ]; then
-    echo "Value $SYSCTL_FILE_STR3 exists."
-    SYSCTL_STR3_EXIST="1"
+
+  if check_sysctl "$SYSCTL_FILE_STR4"; then
+    log_info "Value '$SYSCTL_FILE_STR4' already active"
+    SYSCTL_STR4_EXIST=1
   fi
-  if [ ! -z "`sysctl --system | grep "\b$SYSCTL_FILE_STR4\b"`" ]; then
-    echo "Value $SYSCTL_FILE_STR4 exists."
-    SYSCTL_STR4_EXIST="1"
+
+  if check_sysctl "$SYSCTL_FILE_STR5"; then
+    log_info "Value '$SYSCTL_FILE_STR5' already active"
+    SYSCTL_STR5_EXIST=1
   fi
-  if [ ! -z "`sysctl --system | grep "\b$SYSCTL_FILE_STR5\b"`" ]; then
-    echo "Value $SYSCTL_FILE_STR5 exists."
-    SYSCTL_STR5_EXIST="1"
+}
+
+append_if_needed()
+{
+  exist_flag=$1
+  line=$2
+  file=$3
+
+  if [ -n "$exist_flag" ]; then
+    return
   fi
+
+  if config_contains "$line" "$file"; then
+    return
+  fi
+
+  printf '%s\n' "$line"
 }
 
 write_file()
 {
   file=$1
-  if [ -z "$SYSCTL_STR1_EXIST" ]; then
-    if [ -z "`grep "\b$SYSCTL_FILE_STR1\b" $file`" ]; then
-      echo $SYSCTL_FILE_STR1
-    fi
-  fi
-  if [ -z "$SYSCTL_STR2_EXIST" ]; then
-    if [ -z "`grep "\b$SYSCTL_FILE_STR2\b" $file`" ]; then
-      echo $SYSCTL_FILE_STR2
-    fi
-  fi
-  if [ -z "$SYSCTL_STR3_EXIST" ]; then
-    if [ -z "`grep "\b$SYSCTL_FILE_STR3\b" $file`" ]; then
-      echo $SYSCTL_FILE_STR3
-    fi
-  fi
-  if [ -z "$SYSCTL_STR4_EXIST" ]; then
-    if [ -z "`grep "\b$SYSCTL_FILE_STR4\b" $file`" ]; then
-      echo $SYSCTL_FILE_STR4
-    fi
-  fi
-  if [ -z "$SYSCTL_STR5_EXIST" ]; then
-    if [ -z "`grep "\b$SYSCTL_FILE_STR5\b" $file`" ]; then
-      echo $SYSCTL_FILE_STR5
-    fi
-  fi
+
+  append_if_needed "$SYSCTL_STR1_EXIST" "$SYSCTL_FILE_STR1" "$file"
+  append_if_needed "$SYSCTL_STR2_EXIST" "$SYSCTL_FILE_STR2" "$file"
+  append_if_needed "$SYSCTL_STR3_EXIST" "$SYSCTL_FILE_STR3" "$file"
+  append_if_needed "$SYSCTL_STR4_EXIST" "$SYSCTL_FILE_STR4" "$file"
+  append_if_needed "$SYSCTL_STR5_EXIST" "$SYSCTL_FILE_STR5" "$file"
 }
 
-set_config()
+update_sysctl_config()
 {
-  # Modern OS
   if [ -d "$SYSCTL_PATH" ]; then
-    if [ ! -f "$SYSCTL_PATH/$CONFIG_NAME" ]; then
-      echo "Writing $SYSCTL_PATH/$CONFIG_NAME..."
-      write_file $SYSCTL_PATH/$CONFIG_NAME > $SYSCTL_PATH/$CONFIG_NAME
-    fi
-  # Old-fashiones OS
-  elif [ -f "$SYSCTL_FILE" ]; then
-    echo "Writing $SYSCTL_FILE..."
-    write_file $SYSCTL_PATH/$CONFIG_NAME >> $SYSCTL_FILE
+    target="$SYSCTL_PATH/$CONFIG_NAME"
+  else
+    target="$SYSCTL_FILE"
   fi
+
+  new_lines=$(write_file "$target")
+
+  if [ -z "$new_lines" ]; then
+    log_info "No configuration changes required"
+    return 1
+  fi
+
+  if [ -f "$target" ]; then
+    printf '%s\n' "$new_lines" >> "$target"
+  else
+    printf '%s\n' "$new_lines" > "$target"
+  fi
+
+  log_info "Updated $target"
+
+  return 0
 }
 
 # Main
@@ -145,11 +211,15 @@ fi
 
 check_os
 check_root
+check_container
 
-check_config
-set_config
+check_running_values
+update_sysctl_config
 
-sysctl --system >/dev/null 2>&1
+if set_config; then
+  log_info "Applying sysctl settings..."
+  sysctl --system >/dev/null 2>&1
+fi
 
-echo "Done. Reboot recommended but non-required."
+log_ok "Done. Reboot recommended but non-required"
 exit 0
