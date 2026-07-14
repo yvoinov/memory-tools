@@ -27,7 +27,7 @@ LDCONF_PATH_D="$LDCONF_PATH/ld.so.conf.d"
 
 # Config names
 # Linux
-LDCONF_LINUX1="lma.conf"
+LDCONF_LINUX1="mt_ld_custom.conf"
 LDCONF_LINUX2="ld.so.conf"
 # SunOS
 CRLE_CONF1="/var/ld/ld.config"
@@ -44,6 +44,21 @@ usage_note()
   exit 0
 }
 
+log_ok()
+{
+    echo "[OK] $*"
+}
+
+log_info()
+{
+    echo "[INFO] $*" >&2
+}
+
+log_error()
+{
+    echo "[ERROR] $*" >&2
+}
+
 check_os()
 {
   if [ "`uname`" = "Linux" ]; then
@@ -53,7 +68,7 @@ check_os()
   elif [ "`uname`" = "FreeBSD" ]; then
     echo "FreeBSD"
   else
-    echo "ERROR: Unsupported OS."
+    log_error "Unsupported OS"
     exit 1
   fi
 }
@@ -61,22 +76,24 @@ check_os()
 check_root()
 {
   if [ -z "`id | grep 'uid=0(root)'`" ]; then
-    echo "ERROR: Must be run as root."
+    log_error "Must be run as root"
     exit 3
+  else
+    log_ok "Running as root"
   fi
 }
 
 check_lib()
 {
   if [ ! -f "$ALLOCATOR_PATH" ] && [ ! -f "$ALLOCATOR_PATH64" ]; then
-    echo "ERROR: The path(s) to libraries being added do not exist. Install allocator first."
+    log_error "The path(s) to libraries being added do not exist. Install allocator first"
     exit 2
   fi
   if [ -f "$ALLOCATOR_PATH" ]; then
-    echo $ALLOCATOR_PATH
+    log_ok $ALLOCATOR_PATH
   fi
   if [ -f "$ALLOCATOR_PATH64" ]; then
-    echo $ALLOCATOR_PATH64
+    log_ok $ALLOCATOR_PATH64
   fi
 }
 
@@ -112,7 +129,7 @@ write_sunos()
   else
     crle -64 -c /var/ld/64/ld.config -l /lib/64:/usr/lib/64:$LD_PATH -s /lib/secure/64:/usr/lib/secure/64:$LD_PATH2
   fi
-  echo "Note: For global preload make ld.config by youself. -e/-E options should not added automatically"
+  log_info "For global preload make ld.config by youself. -e/-E options should not added automatically"
 }
 
 write_freebsd()
@@ -128,7 +145,7 @@ write_freebsd()
 check_linux()
 {
   if [ ! -z "`ldconfig -p | grep ltalloc`" ]; then
-    echo "Check: All ok."
+    log_ok "Linux check: All ok"
   fi
 }
 
@@ -152,6 +169,8 @@ fi
 
 check_root
 check_lib
+
+log_info "Running on `check_os`"
 
 if [ "`check_os`" = "Linux" ]; then
   write_linux
