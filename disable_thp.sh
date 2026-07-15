@@ -5,7 +5,7 @@
 ## After installation and reboot, THP will be turned off globally.
 ## To turn it back on, do systemctl disable disable-thp && systemctl stop disable-thp
 ##
-## Version 1.2
+## Version 1.3
 ## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
@@ -64,6 +64,17 @@ check_root()
   log_ok "Running as root"
 }
 
+check_dest_writable()
+{
+  dest=$1
+
+  if [ ! -w "$dest" ]; then
+    log_error "$dest is read-only"
+    path_ro="1"
+    exit 4
+  fi
+}
+
 check_and_set_thp_path()
 {
   if [ -d "$VALUE_PATH_BASE/$VALUE_PATH_COMMON" ]; then
@@ -78,11 +89,13 @@ check_and_set_thp_path()
 
 write_service()
 {
+  path_to_write=$1
+
   echo '[Unit]'
   echo 'Description=Disable Transparent Huge Pages (THP)'
   echo '[Service]'
   echo 'Type=simple'
-  echo 'ExecStart=/bin/sh -c "echo 'never' > '`check_and_set_thp_path`'/enabled && echo 'never' > '`check_and_set_thp_path`'/defrag"'
+  echo 'ExecStart=/bin/sh -c "echo 'never' > '$path_to_write'/enabled && echo 'never' > '$path_to_write'/defrag"'
   echo '[Install]'
   echo 'WantedBy=multi-user.target'
 }
@@ -108,19 +121,32 @@ fi
 check_os
 check_root
 
+unit_wrote="0"
+path_ro="0"
+
 if [ ! -f "$UNIT_PATH/$UNIT_FILE_NAME" ]; then
-  write_service > $UNIT_PATH/$UNIT_FILE_NAME
+  thp_path=$(check_and_set_thp_path)
+  check_dest_writable "$thp_path"
+  write_service $thp_path > $UNIT_PATH/$UNIT_FILE_NAME
+  unit_wrote="1"
 else
   log_info "Unit already exists"
 fi
 
-systemctl daemon-reload
-if [ "`systemctl --version | grep systemd | awk '{ print $2 }'`" -ge "220" ]; then
-  systemctl enable --now disable-thp
+if [ "$unit_wrote" = "1" -a "$path_ro" = "0" ]; then
+  systemctl daemon-reload
+  if [ "$(systemctl --version | grep systemd | awk '{ print $2 }')" -ge "220" ]; then
+    systemctl enable --now disable-thp
+  else
+    systemctl start disable-thp
+    systemctl enable disable-thp
+  fi
 else
-  systemctl start disable-thp
-  systemctl enable disable-thp
+  systemctl status --no-pager $UNIT_FILE_NAME
 fi
 
-log_ok "Done. Please reboot this system now"
+log_ok "Done"
+if [ "$unit_wrote" = "1" -a "$path_ro" = "0" ]; then
+  log_ok "Please reboot this system now"
+fi
 exit 0
