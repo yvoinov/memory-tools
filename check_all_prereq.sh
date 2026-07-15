@@ -69,6 +69,11 @@ log_nok()
   printf "[NOT OK] $*\n" >&2
 }
 
+log_info()
+{
+  printf "[INFO] $*\n" >&2
+}
+
 log_error()
 {
   printf "[ERROR] $*\n" >&2
