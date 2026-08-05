@@ -98,12 +98,12 @@ check_lib()
 
 write_linux()
 {
-  if [ -d $LD_CONF_PATH_D ]; then
+  if [ -d $LDCONF_PATH_D ]; then
     if [ -f $ALLOCATOR_PATH ]; then
-      echo $LD_PATH1 > $LD_CONF_PATH_D/$LDCONF_LINUX1
+      echo $LD_PATH1 > $LDCONF_PATH_D/$LDCONF_LINUX1
     fi
     if [ -f $ALLOCATOR_PATH64 ]; then
-      echo $LD_PATH2 >> $LD_CONF_PATH_D/$LDCONF_LINUX1
+      echo $LD_PATH2 >> $LDCONF_PATH_D/$LDCONF_LINUX1
     fi
   else
     if [ -f $ALLOCATOR_PATH ]; then
