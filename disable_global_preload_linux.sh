@@ -3,7 +3,7 @@
 #####################################################################################
 ## The script for disable non-system allocator global preload. Linux version.
 ##
-## Version 1.3
+## Version 1.4
 ## Written by Y.Voinov (C) 2025-2026
 #####################################################################################
 
@@ -19,7 +19,7 @@ LIBRARY_NAME="*alloc.so"
 
 # Find allocator lib(s)
 # We assume that there is only one allocator in a given path and it has a corresponding name pattern.
-ALLOCATOR_SYMLINK_PATH="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep $BITNESS | cut -d':' -f1`"
+ALLOCATOR_SYMLINK_PATH="`find $LIBRARY_PREFIX -name "$LIBRARY_NAME" -exec env POSIXLY_CORRECT=1 file {} \; | grep "$BITNESS" | cut -d':' -f1`"
 
 # Subroutines
 usage_note()
