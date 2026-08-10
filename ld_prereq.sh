@@ -14,10 +14,10 @@ LIB_NAME="$LIB_NAME_BASE.so"
 
 # Find allocator lib(s)
 # We assume that there is only one allocator in a given path and it has a corresponding name pattern.
-ALLOCATOR_PATH="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 32 | cut -d':' -f1`"
-ALLOCATOR_PATH64="`find $LD_BASE -name $LIB_NAME -exec file {} \; | grep 64 | cut -d':' -f1`"
+ALLOCATOR_PATH32="`find $LD_BASE -name $LIB_NAME -exec env POSIXLY_CORRECT=1 file {} \; | grep 32 | cut -d':' -f1`"
+ALLOCATOR_PATH64="`find $LD_BASE -name $LIB_NAME -exec env POSIXLY_CORRECT=1 file {} \; | grep 64 | cut -d':' -f1`"
 
-LD_PATH1="`dirname $ALLOCATOR_PATH 2>/dev/null`"
+LD_PATH1="`dirname $ALLOCATOR_PATH32 2>/dev/null`"
 LD_PATH2="`dirname $ALLOCATOR_PATH64 2>/dev/null`"
 
 # Paths to write
@@ -84,12 +84,31 @@ check_root()
 
 check_lib()
 {
-  if [ ! -f "$ALLOCATOR_PATH" ] && [ ! -f "$ALLOCATOR_PATH64" ]; then
-    log_error "The path(s) to libraries being added do not exist. Install allocator first"
-    exit 2
+  allocator_count="0"
+
+  if [ ! -z "$ALLOCATOR_PATH32" ]; then
+    count="`echo "$ALLOCATOR_PATH32" | wc -l | sed 's/[ ]*//g'`"
+    allocator_count="`expr $allocator_count + $count`"
   fi
-  if [ -f "$ALLOCATOR_PATH" ]; then
-    log_ok $ALLOCATOR_PATH
+
+  if [ ! -z "$ALLOCATOR_PATH64" ]; then
+    count="`echo "$ALLOCATOR_PATH64" | wc -l | sed 's/[ ]*//g'`"
+    allocator_count="`expr $allocator_count + $count`"
+  fi
+
+  if [ "$allocator_count" -gt 1 ]; then
+    log_info "Multiple allocator libraries found: $allocator_count"
+    log_info "[ $ALLOCATOR_PATH32 ]"
+    log_info "[ $ALLOCATOR_PATH64 ]"
+    log_info "Narrow the search from currernt LD_BASE=$LD_BASE to a subdirectory"
+    exit 2
+  elif [ ! -f "$ALLOCATOR_PATH32" ] || [ ! -f "$ALLOCATOR_PATH64" ]; then
+    log_error "The path(s) to libraries being added do not exist. Install allocator first"
+    exit 3
+  fi
+
+  if [ -f "$ALLOCATOR_PATH32" ]; then
+    log_ok $ALLOCATOR_PATH32
   fi
   if [ -f "$ALLOCATOR_PATH64" ]; then
     log_ok $ALLOCATOR_PATH64
@@ -99,14 +118,14 @@ check_lib()
 write_linux()
 {
   if [ -d $LDCONF_PATH_D ]; then
-    if [ -f $ALLOCATOR_PATH ]; then
+    if [ -f $ALLOCATOR_PATH32 ]; then
       echo $LD_PATH1 > $LDCONF_PATH_D/$LDCONF_LINUX1
     fi
     if [ -f $ALLOCATOR_PATH64 ]; then
       echo $LD_PATH2 >> $LDCONF_PATH_D/$LDCONF_LINUX1
     fi
   else
-    if [ -f $ALLOCATOR_PATH ]; then
+    if [ -f $ALLOCATOR_PATH32 ]; then
       echo $LD_PATH1 > $LDCONF_PATH/$LDCONF_LINUX2
     fi
     if [ -f $ALLOCATOR_PATH64 ]; then
