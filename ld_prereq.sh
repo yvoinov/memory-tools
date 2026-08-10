@@ -3,7 +3,7 @@
 #####################################################################################
 ## The script executes ld prerequisites for custom allocator (Solaris/Linux/FreeBSD).
 ##
-## Version 1.7
+## Version 1.8
 ## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
