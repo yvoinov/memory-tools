@@ -3,7 +3,7 @@
 #####################################################################################
 ## The script executes ld prerequisites for custom allocator (Solaris/Linux/FreeBSD).
 ##
-## Version 1.8
+## Version 2.0
 ## Written by Y.Voinov (C) 2022-2026
 #####################################################################################
 
@@ -12,13 +12,11 @@ LD_BASE="/usr/local"
 LIB_NAME_BASE="*alloc"
 LIB_NAME="$LIB_NAME_BASE.so"
 
-# Find allocator lib(s)
-# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
-ALLOCATOR_PATH32="`find $LD_BASE -name $LIB_NAME -exec env POSIXLY_CORRECT=1 file {} \; | grep 32 | cut -d':' -f1`"
-ALLOCATOR_PATH64="`find $LD_BASE -name $LIB_NAME -exec env POSIXLY_CORRECT=1 file {} \; | grep 64 | cut -d':' -f1`"
+ALLOCATOR_PATH32=""
+ALLOCATOR_PATH64=""
 
-LD_PATH1="`dirname $ALLOCATOR_PATH32 2>/dev/null`"
-LD_PATH2="`dirname $ALLOCATOR_PATH64 2>/dev/null`"
+LD_PATH1=""
+LD_PATH2=""
 
 # Paths to write
 # Linux
@@ -29,6 +27,7 @@ LDCONF_PATH_D="$LDCONF_PATH/ld.so.conf.d"
 # Linux
 LDCONF_LINUX1="mt_ld_custom.conf"
 LDCONF_LINUX2="ld.so.conf"
+
 # SunOS
 CRLE_CONF1="/var/ld/ld.config"
 CRLE_CONF2="/var/ld/64/ld.config"
@@ -41,6 +40,7 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "    -h, -H, --help   show this help"
+  echo "    -b, --base    override allocator base directory"
   exit 0
 }
 
@@ -100,9 +100,21 @@ check_lib()
     log_info "Multiple allocator libraries found: $allocator_count"
     log_info "[ $ALLOCATOR_PATH32 ]"
     log_info "[ $ALLOCATOR_PATH64 ]"
-    log_info "Narrow the search from currernt LD_BASE=$LD_BASE to a subdirectory"
-    exit 2
-  elif [ ! -f "$ALLOCATOR_PATH32" ] || [ ! -f "$ALLOCATOR_PATH64" ]; then
+    if [ "$allocator_count" -eq 2 ] && [ ! -z "$ALLOCATOR_PATH32" ] && [ ! -z "$ALLOCATOR_PATH64" ]; then
+      path1="`dirname "$ALLOCATOR_PATH32" 2>/dev/null`"
+      path2="`dirname "$ALLOCATOR_PATH64" 2>/dev/null`"
+      path1_4="`echo "$path1" | sed 's#^/##' | cut -d'/' -f1-4`"
+      path2_4="`echo "$path2" | sed 's#^/##' | cut -d'/' -f1-4`"
+      if [ "$path1_4" != "$path2_4" ]; then
+        log_error "Allocator paths do not match up to 4 levels"
+        log_info "Narrow the search from current LD_BASE=$LD_BASE to a subdirectory"
+        exit 2
+      fi
+    else
+      log_info "Narrow the search from current LD_BASE=$LD_BASE to a subdirectory"
+      exit 2
+    fi
+  elif [ ! -f "$ALLOCATOR_PATH32" ] && [ ! -f "$ALLOCATOR_PATH64" ]; then
     log_error "The path(s) to libraries being added do not exist. Install allocator first"
     exit 3
   fi
@@ -136,7 +148,7 @@ write_linux()
 
 write_sunos()
 {
-  # If custom config exists, just add dirs.
+ # If custom config exists, just add dirs.
   if [ -f $CRLE_CONF1 ]; then
     crle -c /var/ld/ld.config -u -l $LD_PATH1 -s $LD_PATH1
   else
@@ -145,7 +157,7 @@ write_sunos()
   if [ -f $CRLE_CONF2 ]; then
     crle -64 -c /var/ld/64/ld.config -u -l $LD_PATH2 -s $LD_PATH2
   else
-    crle -64 -c /var/ld/64/ld.config -l /lib/64:/usr/lib/64:$LD_PATH -s /lib/secure/64:/usr/lib/secure/64:$LD_PATH2
+    crle -64 -c /var/ld/64/ld.config -l /lib/64:/usr/lib/64:$LD_PATH2 -s /lib/secure/64:/usr/lib/secure/64:/usr/lib:$LD_PATH2
   fi
   log_info "For global preload make ld.config by youself. -e/-E options should not added automatically"
 }
@@ -167,23 +179,53 @@ check_linux()
   fi
 }
 
+check_sunos()
+{
+  if [ ! -z "`crle | grep $LD_PATH1`" -a "`crle -64 | grep $LD_PATH1`" ]; then
+    log_ok "SunOS check: All ok"
+  fi
+}
+
 # Main
- # Parse command line
+# Parse command line
 if [ "x$*" != "x" ]; then
   arg_list=$*
+
   # Read arguments
   for i in $arg_list
   do
     case $i in
-      -h|-H|--help)
-        usage_note
+    -h|-H|--help)
+      usage_note
       ;;
-      *)
-        shift
+    -b|--base)
+      shift
+      if [ -z "$1" ]; then
+        log_error "Option $i requires an argument"
+        exit 2
+      fi
+      LD_BASE="$1"
+      ;;
+    -b=*|--base=*)
+      LD_BASE="`echo "$i" | sed 's/^[^=]*=//'`"
+      ;;
+    *)
+      log_error "Unknown option: $i"
+      exit 2
       ;;
     esac
+    shift
   done
 fi
+
+log_info "LD_BASE=$LD_BASE"
+
+# Find allocator lib(s)
+ALLOCATOR_PATH32="`find $LD_BASE -name $LIB_NAME -exec env POSIXLY_CORRECT=1 file {} \; | grep 32 | cut -d':' -f1`"
+ALLOCATOR_PATH64="`find $LD_BASE -name $LIB_NAME -exec env POSIXLY_CORRECT=1 file {} \; | grep 64 | cut -d':' -f1`"
+
+LD_PATH1="`dirname $ALLOCATOR_PATH32 2>/dev/null`"
+LD_PATH2="`dirname $ALLOCATOR_PATH64 2>/dev/null`"
 
 check_root
 check_lib
@@ -196,6 +238,7 @@ if [ "`check_os`" = "Linux" ]; then
   check_linux
 elif [ "`check_os`" = "SunOS" ]; then
   write_sunos
+  check_sunos
 elif [ "`check_os`" = "FreeBSD" ]; then
   write_freebsd
 fi
