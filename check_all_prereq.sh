@@ -107,17 +107,17 @@ check_lib()
   # Find allocator lib(s)
   # We assume that there is at least one allocator in a given path
   # and it has a corresponding name pattern.
-  ALLOCATOR_PATH="`find $LD_BASE -name $LIB_NAME -exec env POSIXLY_CORRECT=1 file {} \; | grep 32 | cut -d':' -f1`"
+  ALLOCATOR_PATH32="`find $LD_BASE -name $LIB_NAME -exec env POSIXLY_CORRECT=1 file {} \; | grep 32 | cut -d':' -f1`"
   ALLOCATOR_PATH64="`find $LD_BASE -name $LIB_NAME -exec env POSIXLY_CORRECT=1 file {} \; | grep 64 | cut -d':' -f1`"
 
   if [ "$verbose" = "1" ]; then
     echo "Checking custom allocator installed..."
     echo .
-    echo "ALLOCATOR_PATH:"
-    if [ -z "$ALLOCATOR_PATH" ]; then
+    echo "ALLOCATOR_PATH32:"
+    if [ -z "$ALLOCATOR_PATH32" ]; then
       echo "<not found>"
     else
-      echo "$ALLOCATOR_PATH"
+      echo "$ALLOCATOR_PATH32"
     fi
     echo "ALLOCATOR_PATH64:"
     if [ -z "$ALLOCATOR_PATH64" ]; then
@@ -127,7 +127,7 @@ check_lib()
     fi
   fi
 
-  if [ -z "$ALLOCATOR_PATH" -a -z "$ALLOCATOR_PATH64" ]; then
+  if [ -z "$ALLOCATOR_PATH32" -o -z "$ALLOCATOR_PATH64" ]; then
     log_nok "Allocator not found"
     ALL_OK="1"
     return
@@ -137,8 +137,8 @@ check_lib()
 
   allocator_count="0"
 
-  if [ ! -z "$ALLOCATOR_PATH" ]; then
-    count="`echo "$ALLOCATOR_PATH" | wc -l | sed 's/[ ]*//g'`"
+  if [ ! -z "$ALLOCATOR_PATH32" ]; then
+    count="`echo "$ALLOCATOR_PATH32" | wc -l | sed 's/[ ]*//g'`"
     allocator_count="`expr $allocator_count + $count`"
   fi
 
@@ -149,7 +149,7 @@ check_lib()
 
   if [ "$allocator_count" -gt 1 ]; then
     log_info "Multiple allocator libraries found: $allocator_count"
-    log_info "Check ALLOCATOR_PATH/ALLOCATOR_PATH64 in verbose mode"
+    log_info "Check ALLOCATOR_PATH32/ALLOCATOR_PATH64 in verbose mode"
   fi
 }
 
