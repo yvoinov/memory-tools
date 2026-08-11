@@ -130,18 +130,27 @@ check_lib()
 write_linux()
 {
   if [ -d $LDCONF_PATH_D ]; then
-    if [ -f $ALLOCATOR_PATH32 ]; then
-      echo $LD_PATH1 > $LDCONF_PATH_D/$LDCONF_LINUX1
+    conf_file="$LDCONF_PATH_D/$LDCONF_LINUX1"
+  else
+    conf_file="$LDCONF_PATH/$LDCONF_LINUX2"
+  fi
+  if [ ! -f "$conf_file" ]; then
+    if [ -f "$ALLOCATOR_PATH32" ]; then
+      echo $LD_PATH1 > $conf_file
     fi
-    if [ -f $ALLOCATOR_PATH64 ]; then
-      echo $LD_PATH2 >> $LDCONF_PATH_D/$LDCONF_LINUX1
+    if [ -f "$ALLOCATOR_PATH64" ]; then
+      echo $LD_PATH2 >> $conf_file
     fi
   else
-    if [ -f $ALLOCATOR_PATH32 ]; then
-      echo $LD_PATH1 > $LDCONF_PATH/$LDCONF_LINUX2
+    if [ -f "$ALLOCATOR_PATH32" ]; then
+      if [ -z "`grep -F -x "$LD_PATH1" "$conf_file"`" ]; then
+        echo $LD_PATH1 >> $conf_file
+      fi
     fi
-    if [ -f $ALLOCATOR_PATH64 ]; then
-      echo $LD_PATH2 >> $LDCONF_PATH/$LDCONF_LINUX2
+    if [ -f "$ALLOCATOR_PATH64" ]; then
+      if [ -z "`grep -F -x "$LD_PATH2" "$conf_file"`" ]; then
+        echo $LD_PATH2 >> $conf_file
+      fi
     fi
   fi
 }
