@@ -40,7 +40,7 @@ usage_note()
   echo "Usage: `basename $0` [options]"
   echo "Options:"
   echo "    -h, -H, --help   show this help"
-  echo "    -b, --base    override allocator base directory"
+  echo "    -b, -B, --base   override allocator base directory"
   exit 0
 }
 
@@ -207,7 +207,7 @@ if [ "x$*" != "x" ]; then
     -h|-H|--help)
       usage_note
       ;;
-    -b|--base)
+    -b|-B|--base)
       shift
       if [ -z "$1" ]; then
         log_error "Option $i requires an argument"
@@ -215,7 +215,7 @@ if [ "x$*" != "x" ]; then
       fi
       LD_BASE="$1"
       ;;
-    -b=*|--base=*)
+    -b=*|-B=*|--base=*)
       LD_BASE="`echo "$i" | sed 's/^[^=]*=//'`"
       ;;
     *)
