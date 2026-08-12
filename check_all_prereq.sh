@@ -42,7 +42,7 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
-  echo "    -b, --base         override allocator base directory"
+  echo "    -b, -B, --base     override allocator base directory"
   echo "    -v, -V             Verbose. Show details."
   echo "    -h, -H, --help     show this help"
   exit 0
@@ -302,7 +302,7 @@ if [ "x$*" != "x" ]; then
       -h|-H|--help)
         usage_note
       ;;
-      -b|--base)
+      -b|-B|--base)
         shift
         if [ -z "$1" ]; then
           log_error "Option $i requires an argument"
@@ -310,7 +310,7 @@ if [ "x$*" != "x" ]; then
         fi
         LD_BASE="$1"
         ;;
-      -b=*|--base=*)
+      -b=*|-B=*|--base=*)
         LD_BASE="`echo "$i" | sed 's/^[^=]*=//'`"
         ;;
       *)
