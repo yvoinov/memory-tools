@@ -3,11 +3,11 @@
 #####################################################################################
 ## The script checks all prerequisites for custom allocator
 ##
-## Version 1.8
+## Version 2.0
 ## Written by Y.Voinov (C) 2023-2026
 #####################################################################################
 
-# Allocator library search prefix: from where to find
+# Allocator library search prefix: change if installed different base.
 LD_BASE="/usr/local"
 
 # Set library name to find
@@ -42,6 +42,7 @@ usage_note()
   echo "Must be run as root."
   echo "Usage: `basename $0` [options]"
   echo "Options:"
+  echo "    -b, --base         override allocator base directory"
   echo "    -v, -V             Verbose. Show details."
   echo "    -h, -H, --help     show this help"
   exit 0
@@ -301,12 +302,25 @@ if [ "x$*" != "x" ]; then
       -h|-H|--help)
         usage_note
       ;;
+      -b|--base)
+        shift
+        if [ -z "$1" ]; then
+          log_error "Option $i requires an argument"
+          exit 2
+        fi
+        LD_BASE="$1"
+        ;;
+      -b=*|--base=*)
+        LD_BASE="`echo "$i" | sed 's/^[^=]*=//'`"
+        ;;
       *)
         shift
       ;;
     esac
   done
 fi
+
+log_info "LD_BASE=$LD_BASE"
 
 # Get OS once
 os="`check_os`"
