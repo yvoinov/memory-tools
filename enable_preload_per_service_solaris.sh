@@ -10,7 +10,7 @@
 ##    If the service is complex - a one-time executed script or a set of commands in
 ##    a script, then preload must be performed manually.
 ##
-## Version 1.1
+## Version 1.2
 ## Written by Y.Voinov (C) 2025-2026
 #####################################################################################
 
@@ -33,10 +33,12 @@ usage_note()
   echo "Usage: `basename $0` <service-fmri> [options]"
   echo "Options:"
   echo "    -h, -H, --help                     show this help"
+  echo "    -b, -B, --base                     override allocator base directory"
   echo '    -e|-E "VAR1=value VAR2=value ..."  extra environment variables'
   echo ""
   echo "Note: Additional environment variables are typically used to parameterize the allocator."
   echo "      It can also be used to set other environment variables that affect service."
+  echo "      Use -b=/usr/local/lib/... to override the default allocator base directory."
   echo ""
   echo "Example: `basename $0` cron:default"
   exit 0
@@ -69,8 +71,8 @@ check_symlink()
 {
   if [ ! -z "$ALLOCATOR_SYMLINK_PATH_32" -a -f "$ALLOCATOR_SYMLINK_PATH_32" ] && \
      [ ! -z "$ALLOCATOR_SYMLINK_PATH_64" -a -f "$ALLOCATOR_SYMLINK_PATH_64" ]; then
-    echo "Allocator 32 bit: `ls $ALLOCATOR_SYMLINK_PATH_32`"
-    echo "Allocator 64 bit: `ls $ALLOCATOR_SYMLINK_PATH_64`"
+    echo "Allocator 32 bit in $LIBRARY_PREFIX found: `ls $ALLOCATOR_SYMLINK_PATH_32`"
+    echo "Allocator 64 bit in $LIBRARY_PREFIX found: `ls $ALLOCATOR_SYMLINK_PATH_64`"
   else
     echo "ERROR: Symlinks to libraries could not be found. Check allocator installed."
     exit 4
@@ -148,11 +150,24 @@ while [ $# -gt 0 ]; do
     -h|-H|--help)
       usage_note
       ;;
+    -b|-B|--base)
+      option="$1"
+      shift
+      if [ -z "$1" ]; then
+        echo "ERROR: Option $option requires an argument"
+        exit 2
+      fi
+      LIBRARY_PREFIX="$1"
+      ;;
+    -b=*|-B=*|--base=*)
+      LIBRARY_PREFIX="`echo "$1" | sed 's/^[^=]*=//'`"
+      ;;
     -e|-E)
+      option="$1"
       shift
       if [ $# -eq 0 ]; then
-        echo "Error: $1 requires an argument"
-        usage_note
+        echo "ERROR: Option $option requires an argument"
+        exit 2
       fi
       if [ -z "$EXTRA_ENV" ]; then
         EXTRA_ENV="$1"
