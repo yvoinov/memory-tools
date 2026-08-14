@@ -5,7 +5,7 @@
 ## Service name specified as script argument (without any suffix, only service name).
 ## Linux version.
 ##
-## Version 1.6
+## Version 1.7
 ## Written by Y.Voinov (C) 2024-2026
 #####################################################################################
 
@@ -36,7 +36,11 @@ usage_note()
   echo "Usage: `basename $0` <service-name> [options]"
   echo "Options:"
   echo "    -h, -H, --help                     show this help"
+  echo "    -b, -B, --base                     override allocator base directory"
   echo '    -e|-E "VAR1=value VAR2=value ..."  extra environment variables'
+  echo ""
+  echo "Note: Use -b=/usr/local/lib/... to override the default allocator base directory."
+  echo ""
   echo "Example: `basename $0` apache2"
   exit 0
 }
@@ -68,7 +72,7 @@ check_service()
 check_symlink()
 {
   if [ ! -z "$ALLOCATOR_SYMLINK_PATH" -a -f "$ALLOCATOR_SYMLINK_PATH" ]; then
-    echo "Allocator: `ls $ALLOCATOR_SYMLINK_PATH`"
+    echo "Allocator in $LIBRARY_PREFIX found: `ls $ALLOCATOR_SYMLINK_PATH`"
   else
     echo "ERROR: Symlink to library could not be found. Check allocator installed."
     exit 4
@@ -84,9 +88,25 @@ while [ $# -gt 0 ]; do
     -h|-H|--help)
       usage_note
     ;;
-    -e|-E)
+    -b|-B|--base)
+      option="$1"
       shift
-      [ $# -eq 0 ] && usage_note
+      if [ -z "$1" ]; then
+        echo "ERROR: Option $option requires an argument"
+        exit 2
+      fi
+      LIBRARY_PREFIX="$1"
+      ;;
+    -b=*|-B=*|--base=*)
+      LIBRARY_PREFIX="`echo "$1" | sed 's/^[^=]*=//'`"
+      ;;
+    -e|-E)
+      option="$1"
+      shift
+      if [ $# -eq 0 ]; then
+        echo "ERROR: Option $option requires an argument"
+        exit 2
+      fi
       if [ -z "$EXTRA_ENV" ]; then
         EXTRA_ENV="$1"
       else
