@@ -16,10 +16,8 @@ LIBRARY_PREFIX="/usr/local"
 # Set library name to preload
 LIBRARY_NAME="*alloc.so"
 
-# Find allocator lib(s)
-# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
-ALLOCATOR_SYMLINK_PATH_32="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep 32 | cut -d':' -f1`"
-ALLOCATOR_SYMLINK_PATH_64="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep 64 | cut -d':' -f1`"
+ALLOCATOR_SYMLINK_PATH_32=""
+ALLOCATOR_SYMLINK_PATH_64=""
 
 # Subroutines
 usage_note()
@@ -31,6 +29,7 @@ usage_note()
   echo "Options:"
   echo "    -d, -D           disable per-service preload"
   echo "    -n, -N           do not restart service"
+  echo "    -b, -B, --base   override allocator base directory"
   echo "    -h, -H, --help   show this help"
   echo "Example 1 (per-service workaround): `basename $0` cswapache2:default"
   echo "Example 2 (completely disable): `basename $0` cswapache2:default -d"
@@ -58,7 +57,7 @@ check_root()
 
 check_service()
 {
-  if [ -z "`svcs -H  $SERVICE_FMRI | grep $SERVICE_FMRI`" ]; then
+  if [ -z "`svcs -H "$SERVICE_FMRI" | grep "$SERVICE_FMRI"`" ]; then
     exit 3
   fi
 }
@@ -67,8 +66,8 @@ check_symlink()
 {
   if [ ! -z "$ALLOCATOR_SYMLINK_PATH_32" -a -f "$ALLOCATOR_SYMLINK_PATH_32" ] && \
      [ ! -z "$ALLOCATOR_SYMLINK_PATH_64" -a -f "$ALLOCATOR_SYMLINK_PATH_64" ]; then
-    echo "Allocator 32 bit: `ls $ALLOCATOR_SYMLINK_PATH_32`"
-    echo "Allocator 64 bit: `ls $ALLOCATOR_SYMLINK_PATH_64`"
+    echo "Allocator 32 bit: `ls "$ALLOCATOR_SYMLINK_PATH_32"`"
+    echo "Allocator 64 bit: `ls "$ALLOCATOR_SYMLINK_PATH_64"`"
   else
     echo "ERROR: Symlinks to libraries could not be found. Check allocator installed."
     exit 4
@@ -77,9 +76,9 @@ check_symlink()
 
 check_service_has_one_instance()
 {
-  if [ ! "`svcs -H  $SERVICE_FMRI | grep $SERVICE_FMRI | wc -l`" -eq 1 ]; then
-    echo "ERROR: FMRI $SERVICE_NAME returns more than one services:"
-    echo "`svcs -H  $SERVICE_FMRI | grep $SERVICE_FMRI`"
+  if [ ! "`svcs -H "$SERVICE_FMRI" | grep "$SERVICE_FMRI" | wc -l`" -eq 1 ]; then
+    echo "ERROR: FMRI $SERVICE_FMRI returns more than one services:"
+    echo "`svcs -H "$SERVICE_FMRI" | grep "$SERVICE_FMRI"`"
     echo "Please choose one more precisely."
     exit 5
   fi
@@ -108,14 +107,14 @@ get_env_filtered()
 
     case "$tok" in
       LD_PRELOAD_32=*|LD_PRELOAD_64=*)
-      ;;
+        ;;
       *)
         if [ -z "$out" ]; then
           out="\"$tok\""
         else
           out="$out \"$tok\""
         fi
-      ;;
+        ;;
     esac
   done
 
@@ -125,30 +124,34 @@ get_env_filtered()
 disable_preload()
 {
   mode=$1
-  full_smf_name="`svcs -H $SERVICE_FMRI | awk '{ print $3 }'`"
+  full_smf_name="`svcs -H "$SERVICE_FMRI" | awk '{ print $3 }'`"
   fmri="`printf '%s\n' "$full_smf_name" | sed -e 's/^svc://' -e 's/:default$//'`"
+
   if [ "$mode" = "1" ]; then
-    if [ ! -n "`svccfg -s $fmri listprop start/environment | grep 'LD_PRELOAD_32=$ALLOCATOR_SYMLINK_PATH_32'`" ]; then
-      svccfg -s $fmri unsetenv LD_PRELOAD_32
+    if [ -n "`svccfg -s "$fmri" listprop start/environment | grep "LD_PRELOAD_32=$ALLOCATOR_SYMLINK_PATH_32"`" ]; then
+      svccfg -s "$fmri" unsetenv LD_PRELOAD_32
       echo "INFO: 32 bit disabled."
-    elif [ ! -n "`svccfg -s $fmri listprop start/environment | grep 'LD_PRELOAD_64=$ALLOCATOR_SYMLINK_PATH_64'`" ]; then
-      svccfg -s $fmri unsetenv LD_PRELOAD_64
+    fi
+
+    if [ -n "`svccfg -s "$fmri" listprop start/environment | grep "LD_PRELOAD_64=$ALLOCATOR_SYMLINK_PATH_64"`" ]; then
+      svccfg -s "$fmri" unsetenv LD_PRELOAD_64
       echo "INFO: 64 bit disabled."
     fi
   else
-    if [ -z "`svccfg -s $fmri listprop start/environment`" ]; then
-      if [ -z "`svccfg -s $fmri listpg start`" ]; then
+    if [ -z "`svccfg -s "$fmri" listprop start/environment`" ]; then
+      if [ -z "`svccfg -s "$fmri" listpg start`" ]; then
         # The start method may also be missing
         printf "Property start not exists. Create..."
-        svccfg -s $fmri <<EOT
+        svccfg -s "$fmri" <<EOT
           addpg start method
           end
 EOT
         echo "Done."
       fi
+
       # In case of no property start/environment exists
       printf "Property start/environment not exists. Create..."
-      svccfg -s $fmri <<EOT
+      svccfg -s "$fmri" <<EOT
         setprop start/environment=astring:()
         end
 EOT
@@ -160,24 +163,50 @@ EOT
     # Let's null both variables to not choose with service bitness or value
     # Build final command line safely. Keep another environments if any
     command='setprop start/environment=("LD_PRELOAD_32=" "LD_PRELOAD_64="'
+
     if [ -n "$envs" ]; then
-     command="$command $envs"
+      command="$command $envs"
     fi
+
     command="$command)"
 
-    svccfg -s $fmri <<EOT
+    svccfg -s "$fmri" <<EOT
       $command
       end
 EOT
   fi
-  svcadm refresh $full_smf_name
+
+  svcadm refresh "$full_smf_name"
+
   if [ "$disable_restart" != "1" ]; then
-    svcadm restart $full_smf_name
+    svcadm restart "$full_smf_name"
+  fi
+
+  count=0
+  while [ $count -lt 30 ]; do
+    service_state="`svcs -H -o state $SERVICE_FMRI`"
+
+    if [ "$service_state" = "online" ]; then
+      break
+    fi
+
+    if [ "$service_state" = "maintenance" ]; then
+      echo "WARNING: Service $SERVICE_FMRI entered maintenance. Clearing..."
+      svcadm clear $SERVICE_FMRI
+    fi
+
+    sleep 1
+    count=`expr $count + 1`
+  done
+
+  if [ "$service_state" != "online" ]; then
+    echo "ERROR: Service $SERVICE_FMRI is not online: $service_state"
+    exit 6
   fi
 }
 
 # Main
-if [ -z $1 ]; then
+if [ -z "$1" ]; then
   usage_note
 fi
 
@@ -189,28 +218,48 @@ while [ $# -gt 0 ]; do
   case "$1" in
     -d|-D)
       disable_full="1"
-    ;;
+      shift
+      ;;
     -n|-N)
       disable_restart="1"
-    ;;
+      shift
+      ;;
+    -b|-B|--base)
+      option="$1"
+      shift
+      if [ $# -eq 0 ]; then
+        echo "ERROR: Option $option requires an argument"
+        exit 2
+      fi
+      LIBRARY_PREFIX="$1"
+      shift
+      ;;
+    -b=*|-B=*|--base=*)
+      LIBRARY_PREFIX="`echo "$1" | sed 's/^[^=]*=//'`"
+      shift
+      ;;
     -h|-H|--help)
       usage_note
-    ;;
+      ;;
     *)
-    # Accumulate to one string
       if [ -z "$SERVICE_FMRI" ]; then
-        SERVICE_FMRI=$1
+        SERVICE_FMRI="$1"
       else
         SERVICE_FMRI="$SERVICE_FMRI $1"
       fi
-    ;;
-    esac
-    shift
+      shift
+      ;;
+  esac
 done
 
-if [ -z $SERVICE_FMRI ]; then
+if [ -z "$SERVICE_FMRI" ]; then
   usage_note
 fi
+
+# Find allocator lib(s)
+# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
+ALLOCATOR_SYMLINK_PATH_32="`find "$LIBRARY_PREFIX" -name "$LIBRARY_NAME" -exec file {} \; | grep 32 | cut -d':' -f1`"
+ALLOCATOR_SYMLINK_PATH_64="`find "$LIBRARY_PREFIX" -name "$LIBRARY_NAME" -exec file {} \; | grep 64 | cut -d':' -f1`"
 
 check_os
 check_root
@@ -218,7 +267,7 @@ check_service
 check_symlink
 check_service_has_one_instance
 
-disable_preload $disable_full
+disable_preload "$disable_full"
 
 echo "Completed for $SERVICE_FMRI."
 
