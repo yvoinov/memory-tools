@@ -20,10 +20,8 @@ LIBRARY_PREFIX="/usr/local"
 # Set library name to preload
 LIBRARY_NAME="*alloc.so"
 
-# Find allocator lib(s)
-# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
-ALLOCATOR_SYMLINK_PATH_32="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep 32 | cut -d':' -f1`"
-ALLOCATOR_SYMLINK_PATH_64="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep 64 | cut -d':' -f1`"
+ALLOCATOR_SYMLINK_PATH_32=""
+ALLOCATOR_SYMLINK_PATH_64=""
 
 # Subroutines
 usage_note()
@@ -108,8 +106,8 @@ check_preloaded_already()
   var=$1
   value=$2
   fmri="`printf '%s\n' "$SERVICE_FMRI" | sed -e 's/^svc://' -e 's/:default$//'`"
-  cond="`svccfg -s $fmri listprop start/environment | grep 'LD_PRELOAD_$var=$value'`"
-  if [ ! -z "$cond" ]; then
+  cond="`svccfg -s "$fmri" listprop start/environment | grep "LD_PRELOAD_$var=$value"`"
+  if [ -n "$cond" ]; then
     echo "ERROR: $SERVICE_FMRI already preloaded."
     exit 8
   fi
@@ -139,6 +137,28 @@ check_service_bitness_and_set_preload()
   fi
   svcadm refresh $SERVICE_FMRI
   svcadm restart $SERVICE_FMRI
+
+  count=0
+  while [ $count -lt 30 ]; do
+    service_state="`svcs -H -o state $SERVICE_FMRI`"
+
+    if [ "$service_state" = "online" ]; then
+      break
+    fi
+
+    if [ "$service_state" = "maintenance" ]; then
+      echo "WARNING: Service $SERVICE_FMRI entered maintenance. Clearing..."
+      svcadm clear $SERVICE_FMRI
+    fi
+
+    sleep 1
+    count=`expr $count + 1`
+  done
+
+  if [ "$service_state" != "online" ]; then
+    echo "ERROR: Service $SERVICE_FMRI is not online: $service_state"
+    exit 9
+  fi
 }
 
 # Main
@@ -158,9 +178,11 @@ while [ $# -gt 0 ]; do
         exit 2
       fi
       LIBRARY_PREFIX="$1"
+      shift
       ;;
     -b=*|-B=*|--base=*)
       LIBRARY_PREFIX="`echo "$1" | sed 's/^[^=]*=//'`"
+      shift
       ;;
     -e|-E)
       option="$1"
@@ -195,6 +217,11 @@ done
 if [ -z $SERVICE_FMRI ]; then
   usage_note
 fi
+
+# Find allocator lib(s)
+# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
+ALLOCATOR_SYMLINK_PATH_32="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep 32 | cut -d':' -f1`"
+ALLOCATOR_SYMLINK_PATH_64="`find $LIBRARY_PREFIX -name $LIBRARY_NAME -exec file {} \; | grep 64 | cut -d':' -f1`"
 
 check_os
 check_root
