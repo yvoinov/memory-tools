@@ -22,7 +22,7 @@ LIBRARY_NAME="libc.so"
 DROP_IN_DIR="/usr/lib/systemd/system"
 
 # Find libc binary
-LIBC_ABSOLUTE_PATH="`find $LIBRARY_PREFIX -name $LIBRARY_NAME.? -exec file {} \; | grep $BITNESS-bit | cut -d':' -f1`"
+LIBC_ABSOLUTE_PATH="`find "$LIBRARY_PREFIX" -name "$LIBRARY_NAME.?" -exec file {} \; | grep "$BITNESS-bit" | cut -d':' -f1`"
 CONF_FILE_NAME="mt_preload_env.conf"
 
 # Drop-in extra env
@@ -62,7 +62,7 @@ check_root()
 
 check_service()
 {
-  if [ ! -z "`systemctl status $SERVICE_NAME | grep 'could not be found.'`" ]; then
+  if [ ! -z "`systemctl status "$SERVICE_NAME" 2>&1 | grep 'could not be found.'`" ]; then
     echo "ERROR: Service $SERVICE_NAME could not be found."
     exit 3
   fi
@@ -71,30 +71,33 @@ check_service()
 disable_drop_in()
 {
   drop_in_file_name=$1
-  if [ -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
+
+  if [ -d "$DROP_IN_DIR/$SERVICE_NAME.service.d" ]; then
     echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d found."
-    if [ -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$drop_in_file_name ]; then
-      rm -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$drop_in_file_name
+
+    if [ -f "$DROP_IN_DIR/$SERVICE_NAME.service.d/$drop_in_file_name" ]; then
+      rm -f "$DROP_IN_DIR/$SERVICE_NAME.service.d/$drop_in_file_name"
       echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$drop_in_file_name removed."
-      rmdir $DROP_IN_DIR/$SERVICE_NAME.service.d
-      if [ ! -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
-        echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d removed."
-      fi
+    else
+      echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$drop_in_file_name does not exist."
+    fi
+
+    if rmdir "$DROP_IN_DIR/$SERVICE_NAME.service.d" 2>/dev/null; then
+      echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d removed."
     fi
   else
-    echo "ERROR: Directory $DROP_IN_DIR/$SERVICE_NAME.service.d does not exists."
-    exit 4
+    echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d does not exist."
   fi
 }
 
 write_file_content()
 {
-  echo "[Service]" > $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  echo "Environment='LD_PRELOAD=$LIBC_ABSOLUTE_PATH'" >> $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  echo "[Service]" > "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME"
+  echo "Environment='LD_PRELOAD=$LIBC_ABSOLUTE_PATH'" >> "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME"
 }
 
 # Main
-if [ -z $1 ]; then
+if [ -z "$1" ]; then
   usage_note
 fi
 
@@ -106,26 +109,30 @@ while [ $# -gt 0 ]; do
   case "$1" in
     -d|-D)
       disable_full="1"
-    ;;
+      ;;
     -e|-E)
       disable_extra_env="1"
-    ;;
+      ;;
     -h|-H|--help)
       usage_note
-    ;;
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      usage_note
+      ;;
     *)
-    # Accumulate to one string
+      # Accumulate to one string
       if [ -z "$SERVICE_NAME" ]; then
-        SERVICE_NAME=$1
+        SERVICE_NAME="$1"
       else
         SERVICE_NAME="$SERVICE_NAME $1"
       fi
-    ;;
-    esac
-    shift
+      ;;
+  esac
+  shift
 done
 
-if [ -z $SERVICE_NAME ]; then
+if [ -z "$SERVICE_NAME" ]; then
   usage_note
 fi
 
@@ -134,37 +141,45 @@ check_root
 check_service
 
 if [ "$disable_extra_env" = "1" ]; then
-  disable_drop_in $CONF_EXTRA_ENV_FILE
+  disable_drop_in "$CONF_EXTRA_ENV_FILE"
 fi
 
 if [ "$disable_full" = "1" ]; then
-  disable_drop_in $CONF_FILE_NAME
+  disable_drop_in "$CONF_FILE_NAME"
+
+  systemctl daemon-reload
+  systemctl restart "$SERVICE_NAME"
+
+  echo "Completed for $SERVICE_NAME."
+
   exit 0
 fi
 
-if [ ! -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
-  mkdir -p $DROP_IN_DIR/$SERVICE_NAME.service.d/
+if [ ! -d "$DROP_IN_DIR/$SERVICE_NAME.service.d" ]; then
+  mkdir -p "$DROP_IN_DIR/$SERVICE_NAME.service.d/"
   echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d created."
 else
   echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d exists."
 fi
 
-if [ ! -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
+if [ ! -f "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME" ]; then
   write_file_content
   echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
 else
   echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
-  if [ "`grep alloc.so $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME`" ]; then
+
+  if [ "`grep alloc.so "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME"`" ]; then
     # Overwrite file content if preload exist
     write_file_content
-    echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME overwrited."
+    echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME overwritten."
   fi
+
   echo "New file content:"
-  cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  cat "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME"
 fi
 
 systemctl daemon-reload
-systemctl restart $SERVICE_NAME
+systemctl restart "$SERVICE_NAME"
 
 echo "Completed for $SERVICE_NAME."
 
