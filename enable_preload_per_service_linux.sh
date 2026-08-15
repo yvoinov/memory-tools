@@ -20,9 +20,9 @@ LIBRARY_NAME="*alloc.so"
 # Drop-in directory
 DROP_IN_DIR="/usr/lib/systemd/system"
 
-# Find allocator lib(s)
-# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
-ALLOCATOR_SYMLINK_PATH="`find $LIBRARY_PREFIX -name "$LIBRARY_NAME" -exec env POSIXLY_CORRECT=1 file {} \; | grep "$BITNESS" | cut -d':' -f1`"
+# Allocator library path
+ALLOCATOR_SYMLINK_PATH=""
+
 CONF_FILE_NAME="mt_preload_env.conf"
 
 # Drop-in extra env
@@ -71,7 +71,22 @@ check_service()
 
 check_symlink()
 {
-  if [ ! -z "$ALLOCATOR_SYMLINK_PATH" -a -f "$ALLOCATOR_SYMLINK_PATH" ]; then
+  if [ -z "$ALLOCATOR_SYMLINK_PATH" ]; then
+    echo "ERROR: No $BITNESS bit allocator found in $LIBRARY_PREFIX."
+    echo "Check allocator installed."
+    exit 4
+  fi
+
+  allocator_count=`printf '%s\n' "$ALLOCATOR_SYMLINK_PATH" | wc -l`
+
+  if [ "$allocator_count" -gt 1 ]; then
+    echo "ERROR: More than one $BITNESS bit allocator found in $LIBRARY_PREFIX:"
+    printf '%s\n' "$ALLOCATOR_SYMLINK_PATH"
+    echo "Please specify a more precise allocator base directory with -b."
+    exit 4
+  fi
+
+  if [ -f "$ALLOCATOR_SYMLINK_PATH" ]; then
     echo "Allocator in $LIBRARY_PREFIX found: `ls $ALLOCATOR_SYMLINK_PATH`"
   else
     echo "ERROR: Symlink to library could not be found. Check allocator installed."
@@ -82,12 +97,13 @@ check_symlink()
 # Main
 # Defaults
 EXTRA_ENV=""
+SERVICE_NAME=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|-H|--help)
       usage_note
-    ;;
+      ;;
     -b|-B|--base)
       option="$1"
       shift
@@ -96,9 +112,11 @@ while [ $# -gt 0 ]; do
         exit 2
       fi
       LIBRARY_PREFIX="$1"
+      shift
       ;;
     -b=*|-B=*|--base=*)
       LIBRARY_PREFIX="`echo "$1" | sed 's/^[^=]*=//'`"
+      shift
       ;;
     -e|-E)
       option="$1"
@@ -115,58 +133,62 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     *)
-    # Accumulate to one string
+      # Accumulate to one string
       if [ -z "$SERVICE_NAME" ]; then
-        SERVICE_NAME=$1
+        SERVICE_NAME="$1"
       else
         SERVICE_NAME="$SERVICE_NAME $1"
       fi
-    ;;
-    esac
-    shift
+      ;;
+  esac
+  shift
 done
 
-if [ -z $SERVICE_NAME ]; then
+if [ -z "$SERVICE_NAME" ]; then
   usage_note
 fi
+
+# Find allocator lib(s)
+# We assume that there is only one allocator in a given path and it has a corresponding name pattern.
+ALLOCATOR_SYMLINK_PATH="`find "$LIBRARY_PREFIX" -name "$LIBRARY_NAME" -exec env POSIX_CORRECT=1 file {} \; | grep "$BITNESS" | cut -d':' -f1`"
 
 check_os
 check_root
 check_service
 check_symlink
 
-if [ ! -d $DROP_IN_DIR/$SERVICE_NAME.service.d ]; then
-  mkdir -p $DROP_IN_DIR/$SERVICE_NAME.service.d/
+if [ ! -d "$DROP_IN_DIR/$SERVICE_NAME.service.d" ]; then
+  mkdir -p "$DROP_IN_DIR/$SERVICE_NAME.service.d/"
   echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d created."
 else
   echo "Directory $DROP_IN_DIR/$SERVICE_NAME.service.d exists."
 fi
 
-if [ ! -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME ]; then
-  echo "[Service]" > $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
-  echo "Environment='LD_PRELOAD=$ALLOCATOR_SYMLINK_PATH'" >> $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+if [ ! -f "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME" ]; then
+  echo "[Service]" > "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME"
+  echo "Environment='LD_PRELOAD=$ALLOCATOR_SYMLINK_PATH'" >> "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME"
   echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME created."
 else
   echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME exists."
   echo "File content: "
-  cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME
+  cat "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_FILE_NAME"
 fi
 
 if [ -n "$EXTRA_ENV" ]; then
-  if [ -f $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE ]; then
+  if [ -f "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE" ]; then
     echo "File $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE exists."
     echo "File content: "
-    cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE
+    cat "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE"
     echo "The file will be overwritten."
   fi
 
-  echo "[Service]" > $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE
+  echo "[Service]" > "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE"
   for pair in $EXTRA_ENV; do
-    echo "Environment='$pair'" >> $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE
+    echo "Environment='$pair'" >> "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE"
   done
 
   echo "New file content: "
-  cat $DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE
+  cat "$DROP_IN_DIR/$SERVICE_NAME.service.d/$CONF_EXTRA_ENV_FILE"
 fi
 
 systemctl daemon-reload
