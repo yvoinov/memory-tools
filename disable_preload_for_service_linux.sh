@@ -6,7 +6,7 @@
 ## Service name specified as script argument (without any suffix, only service name).
 ## Linux version.
 ##
-## Version 1.5
+## Version 1.7
 ## Written by Y.Voinov (C) 2024-2026
 #####################################################################################
 
@@ -19,7 +19,7 @@ LIBRARY_PREFIX="/usr"
 LIBRARY_NAME="libc.so"
 
 # Drop-in directory
-DROP_IN_DIR="/usr/lib/systemd/system"
+DROP_IN_DIR="/etc/systemd/system"
 
 # Find libc binary
 LIBC_ABSOLUTE_PATH="`find "$LIBRARY_PREFIX" -name "$LIBRARY_NAME.?" -exec file {} \; | grep "$BITNESS-bit" | cut -d':' -f1`"
