@@ -12,7 +12,7 @@
 # Variables
 
 # Drop-in directory
-DROP_IN_DIR="/usr/lib/systemd/system"
+DROP_IN_DIR="/etc/systemd/system"
 
 # Drop-in extra env
 CONF_EXTRA_ENV_FILE="mt_extra_env.conf"
