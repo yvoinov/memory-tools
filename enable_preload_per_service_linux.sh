@@ -18,7 +18,7 @@ LIBRARY_PREFIX="/usr/local"
 LIBRARY_NAME="*alloc.so"
 
 # Drop-in directory
-DROP_IN_DIR="/usr/lib/systemd/system"
+DROP_IN_DIR="/etc/systemd/system"
 
 # Allocator library path
 ALLOCATOR_SYMLINK_PATH=""
